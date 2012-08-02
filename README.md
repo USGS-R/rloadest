@@ -11,7 +11,7 @@ A typical function should then be commented like this:
 
 	#' Unit conversion function
 	#'
-	#' Imports data from NWIS web service. This function gets the data from here: \url{http://qwwebservices.usgs.gov/}
+	#' Converts units
 	#' @param flow.units string descriptive flow unit
 	#' @param conc.units string descriptive concentration unit
 	#' @param load.units string descriptive load unit
@@ -19,7 +19,6 @@ A typical function should then be commented like this:
 	#' @return conv.factor number conversion factor
 	#' @export
 	#' @examples
-	#' # These examples require an internet connection to run
 	#' loadest.conv.factor('cubic meter per second','milligrams per liter','pounds')
 	loadest.conv.factor <- function(flow.units, conc.units, load.units) {
 	  if(flow.units == "cubic meter per second")
