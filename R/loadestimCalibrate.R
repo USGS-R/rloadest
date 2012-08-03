@@ -9,7 +9,31 @@
 #    2004Nov03 DLLorenz Modified for no censored data
 #    2005Oct07 DLLorenz Added printing of Qadj and Tadj
 #    2005Oct07          This version.
-#
+#    2012Aug02 ldecicco Conversion to R
+
+#' LOADEST Calibration 
+#'
+#' Calibration stuff for loeadest...
+#' @param data string descriptive flow unit
+#' @param sname string descriptive concentration unit
+#' @param flowtrans string descriptive load unit
+#' @param floworder string descriptive flow unit
+#' @param lineartime string descriptive concentration unit
+#' @param seasonal string descriptive load unit
+#' @param period string defaults to ""
+#' @param additional.terms string defaults to "<None>"
+#' @param diurnal string descriptive load unit
+#' @param method string defaults to "AMLE"
+#' @param normal.plot logical defaults to FALSE
+#' @param sl.plot logical defaults to FALSE
+#' @param partial.plot logical defaults to FALSE
+#' @param savefile string defaults to ""
+#' @keywords unit conversions
+#' @return conv.factor list conversion factor
+#' @export
+#' @examples
+#' # These examples require an internet connection to run
+#' loadest.conv.factor('cubic meter per second','milligrams per liter','pounds')
 loadestimCalibrate <- function(data, sname, flowtrans, floworder,
                                lineartime, seasonal, period="",
                                additional.terms = "<None>", diurnal,
