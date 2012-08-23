@@ -19,7 +19,9 @@ loadestimBuildAuto <- function(loadest.temp, sname, model = "best model",
   ## some initial processing
   options(warn=-1) # suppress warning messages
   cat("	***  Load estimation model  ***\n")
-  model <- unlist(unpaste(model.name, sep = " "))[1] # get the model type
+  
+#   model <- unlist(unpaste(model.name, sep = " "))[1] # get the model type  #Laura's edit....
+  
   ## determine the regression fit.
   ## to get exact agreement with the stand-alone version, we must use the
   ## routines in loadest to do the analysis, not survReg--we give up
@@ -32,9 +34,9 @@ loadestimBuildAuto <- function(loadest.temp, sname, model = "best model",
     cat("\n  Model number", model, "selected.\n")
   } # end of "best model selection"
   ##
-  if(model == "0") # no load model
+  if(model == "0") {# no load model
     cat(" No load model!.\n")
-  else { # any model from 1 to 9
+  } else { # any model from 1 to 9
     Qadj <- loadestQadj(loadest.temp[[sname[4]]])
     Tadj <- loadestTadj(loadest.temp$DECTIME)
     model.inp <- loadestSetXLDat(loadest.temp,sname,as.double(model),Qadj,Tadj)
@@ -73,9 +75,9 @@ loadestimBuildAuto <- function(loadest.temp, sname, model = "best model",
                              title.plot, model.inp$censflag[goodrows], sname,
                              normal.plot, sl.plot, partial.plot)
         } # End of plot requests
-      }
-      else
+      } else {
         cat("\n\n*** Data contain censored values, cannot use LAD.\n\n")
+      }       
     } # end of LAD analysis
   } # end of if..else if..else section for creating model
   ## save residuals to the savefile, if possible
