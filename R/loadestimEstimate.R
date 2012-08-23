@@ -15,12 +15,12 @@
 #    2010Sep24 DLLorenz Minor Tweak and added test for sequential data
 #    2010Sep24          This version.
 #
-loadestimEstimate <- function(sname, data, preddata, loadest.model, exact=T,
-                              total=F, totalfile="",
+loadestimEstimate <- function(sname, data, preddata, loadest.model, exact=TRUE,
+                              total=FALSE, totalfile="",
                               annual="None", annualfile="",
                               season="", seasonfile="",
-                              monthly=F, monthfile="", daily=F, dailyfile="",
-                              inst=F, instfile="", conv.factor) {
+                              monthly=FALSE, monthfile="", daily=FALSE, dailyfile="",
+                              inst=FALSE, instfile="", conv.factor) {
   if(is.numeric(loadest.model)) {
     if(loadest.model[1] == -1) {
       cat("\n *** Model not calibrated. ***\n")
@@ -38,9 +38,8 @@ loadestimEstimate <- function(sname, data, preddata, loadest.model, exact=T,
     seasonal <- ""
     period <- ""
     additional.terms <- ""
-    diurnal <- F
-  }
-  else {
+    diurnal <- FALSE
+  } else {
     method <- loadest.model[8]
     model <- -1
     flowtrans <- loadest.model[1]
@@ -77,23 +76,30 @@ loadestimEstimate <- function(sname, data, preddata, loadest.model, exact=T,
   df.ttest <- -diff(dim(model.mat))
   dectime2 <- model.inp$dectime
   first.day <- dectime2[1]
-  first.year <- as.double(as.character(years(preddata[[sname[6]]][1])))
+  
+  first.year <- as.double(as.numeric(format(preddata[[sname[6]]][1], format = "%Y")))
+#   first.year <- as.double(as.character(years(preddata[[sname[6]]][1])))
+  
   ## determine how many observations per day in the input data set.
   Days <- unique(preddata[[sname[6]]])
   cDays <- as.character(Days)
   NVD <- as.integer(length(preddata[[sname[6]]]) / length(cDays) )
-  if(NVD > 1)
+  
+  if(NVD > 1){
     cat(" Input prediction data has", NVD, "observations per day.\n")
-  else
+  } else {
     cat(" Input prediction data has one observation per day.\n")
+  }
+    
   ## Test for sequential
   TestSeq <- unique(diff(as.double(preddata[[sname[6]]])))
   if(any(TestSeq < 0)) {
     cat("\nEstimation stopped, prediction data are not in increasing date order\n\n")
     return()
   }
-  if((length(TestSeq) > 1 && NVD == 1) || (length(TestSeq) > 2 && NVD > 1))
+  if((length(TestSeq) > 1 && NVD == 1) || (length(TestSeq) > 2 && NVD > 1)){
     cat("\nCaution, prediction data contains gaps in dates\n\n")
+  }    
   cat("\n Method of load estimation is", method, "\n\n")
   method <- match(method, c("AMLE", "MLE", "LAD")) # convert to numeric
   ## check for no censored data if method is LAD
