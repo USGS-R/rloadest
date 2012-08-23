@@ -29,8 +29,7 @@ loadestSetXLDat <- function(temp.df, sname, j, Qadj, Tadj, flowtrans, floworder,
       Dectime <-  "DECTIME"
       Date <- "DATES"
       Time <- "TIMES"
-    }
-    else {
+    } else {
       out$censflag <- temp.df[[sname[1]]] == "<"
       out$ylcal <- log(temp.df[[sname[2]]])
       out$yd <- log(temp.df[[sname[3]]])
@@ -39,24 +38,24 @@ loadestSetXLDat <- function(temp.df, sname, j, Qadj, Tadj, flowtrans, floworder,
       Date <- sname[6]
       Time <- sname[7]
     }
-  } # end of sname[1] found
-  else {
+  } else {  # end of sname[1] found
     ## make the dataframe of the prediction data
     ## the first column is julian date
     if(length(sname) == 1) { # standard S-LOADEST
-      Months <- as.double(months(temp.df$DATES))
-      Days <- as.double(days(temp.df$DATES))
-      out$dectime <- julian(Months, Days, 1960)
+#       Months <- as.double(months(temp.df$DATES))
+#       Days <- as.double(days(temp.df$DATES))
+#       out$dectime <- julian(Months, Days, 1960)
+      out$dectime <- julian(temp.df$DATES,origin=as.Date("1960-01-01"))
       Flow <- "FLOW"
       Dectime <-  "DECTIME"
       Date <- "DATES"
       Time <- "TIMES"
-    }
-    else {
+    } else {
       Date <- sname[4]
-      Months <- as.double(months(temp.df[[Date]]))
-      Days <- as.double(days(temp.df[[Date]]))
-      out$dectime <- julian(Months, Days, 1960)
+#       Months <- as.double(months(temp.df[[Date]]))
+#       Days <- as.double(days(temp.df[[Date]]))
+#       out$dectime <- julian(Months, Days, 1960)
+      out$dectime <- julian(temp.df[[Date]],origin=as.Date("1960-01-01"))
       Flow <- sname[2]
       Dectime <-  sname[3]
       Time <- sname[5]
@@ -85,8 +84,7 @@ loadestSetXLDat <- function(temp.df, sname, j, Qadj, Tadj, flowtrans, floworder,
                      cos.DECTIME = cos(DECTIME * 2 * pi))
       NPAR <- NPAR + 2
     }
-  }
-  else { # user defined model
+  } else { # user defined model
     if(floworder != "use anomalies") { # use transformed flow as explanatory variable
       if(flowtrans == "log") {
         lnQ <- log(temp.df[[Flow]]/Qadj)
