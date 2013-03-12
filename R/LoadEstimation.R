@@ -9,17 +9,30 @@
 #    2010Sep24          This version.
 #    2012Aug07 ldecicco Conversion to R
 
-#' Unit conversion function
+#' Main Loadest code
 #'
-#' Converts units
-#' @param flow.units string descriptive flow unit
-#' @param conc.units string descriptive concentration unit
-#' @param load.units string descriptive load unit
+#' TODO: get this code to be the main script that brings all the LOADEST functions together for WRTDS comparisons. 
+#' @param data dataframe
+#' @param constit string
+#' @param detect string
+#' @param conc string
+#' @param load string
+#' @param units string
+#' @param Date string
+#' @param Time string
+#' @param build string
+#' @param method numeric
+#' @param normal.plot logical
+#' @param sl.plot logical
+#' @param partial.plot logical
+#' @param total logical
+#' @param ...
+#' 
 #' @keywords unit conversions
 #' @return conv.factor number conversion factor
 #' @export
 #' @examples
-#' loadest.conv.factor('cubic meter per second','milligrams per liter','pounds')
+#' menuLoadEstimation(somestuff...)
 menuLoadEstimation <- function(data, constit, detect, conc, load, flow, units,
                                Date, Time, build, method, normal.plot, sl.plot,
                                partial.plot, models.predefined, flowtrans,
@@ -44,10 +57,10 @@ menuLoadEstimation <- function(data, constit, detect, conc, load, flow, units,
     if(sum(varindex) == 1) {
       Pvar <- constit
       Rvar <- paste(constit, "[rR][mM][kK]", sep=".")
-      Rvar <- sapply(Rvar,grep,text=allvars)
+#       Rvar <- sapply(Rvar,grep,text=allvars)
+      Rvar <- grep(Rvar,allvars)
       Rvar <- allvars[Rvar]
-    }
-    else { # nope, use R, P prefix
+    } else { # nope, use R, P prefix
       Pvar <- paste("P", constit, sep="")
       Rvar <- paste("R", constit, sep="")
     }
@@ -66,12 +79,12 @@ menuLoadEstimation <- function(data, constit, detect, conc, load, flow, units,
     cat("\n\n****Caution zero load values removed from analysis****\n\n")
     data <- data[data[[Lvar]] <= 0,]
   }
-  if(!missing(Time)) 
+  if(!missing(Time)) {
     data <- data[!is.na(data[[Time]]),]
-  else { # make time (Noon if Date is dates, 0 otherwise extract from Date
-    if(is.dates(data[[Date]]))
+  } else { # make time (Noon if Date is dates, 0 otherwise extract from Date
+    if(is.Date(data[[Date]])){
       TIME <- "1200"
-    else {
+    } else {
       TIME <- as.character(timeDate(julian=data[[Date]], format='%2H%2M'))
       if(all(TIME == '0000'))
         TIME <- "1200" # change to noon
@@ -79,13 +92,18 @@ menuLoadEstimation <- function(data, constit, detect, conc, load, flow, units,
     Time <- "TIMEofDay.temp"
     data[[Time]] <- TIME
   }
-  ## add DECTIME
-  data[[Date]] <- floor(data[[Date]]) ## needed to fix for time, just in case
-  Year <- month.day.year(data[[Date]])$year
-  Days <- as.double(data[[Date]]) - julian(1,1,Year)
-  Days <- Days + as.double(substring(data[[Time]],1,2))/24 +
-    as.double(substring(data[[Time]],3,4))/1440
-  data$DECTIME <- Year + Days/(365 + as.double(leap.year(Year)))
+
+  if (!("DECTIME" %in% colnames(data))){
+    data[[Date]] <- floor(data[[Date]]) ## needed to fix for time, just in case
+    
+    Year <- month.day.year(data[[Date]])$year
+    Days <- as.double(data[[Date]]) - julian(1,1,Year)
+    Days <- Days + as.double(substring(data[[Time]],1,2))/24 +
+      as.double(substring(data[[Time]],3,4))/1440
+    
+    data$DECTIME <- Year + Days/(365 + as.double(leap.year(Year)))    
+  }
+
   ## Dvar is the flux of the detection limit.
   Dvar <- paste("Detect", constit, sep=".")
   if(missing(detect)) { # compute based on most recent value
@@ -93,8 +111,7 @@ menuLoadEstimation <- function(data, constit, detect, conc, load, flow, units,
     if(num.cens == 0) { # determine the minimum value actual value should be irrelevant
       d.value <- min(data[[Pvar]])
       d.value <- 10^floor(log10(d.value))
-    }
-    else {
+    } else {
       d.value <- data[[Pvar]]
       d.current <- d.value[which(data[[Rvar]] == "<")[1]]
       for(i in 1:length(d.value)) { # replace with most recent detection limit
@@ -104,21 +121,23 @@ menuLoadEstimation <- function(data, constit, detect, conc, load, flow, units,
       }
     }
     data[[Dvar]] <- d.value * data[[flow]] * conv.factor
-  } # end of missing
-  else { # detect not missing
+  } else { # detect not missing
     if(is.na(as.double(detect))) { # it is a column, we hope
       data[[Dvar]] <- data[[detect]] * data[[flow]] * conv.factor
-    }
-    else { # it is a numeric constant
+    } else { # it is a numeric constant
       d.value <- rep(as.double(detect), nrow(data))
       data[[Dvar]] <- d.value * data[[flow]] * conv.factor
     }
   } # end not missing
+  
   ## Done with the initial data processing (computing loads and other 
-  ## necessary data).  Thsi corresponds to creating the data object in
+  ## necessary data).  This corresponds to creating the data object in
   ## S-LOADEST.
+  
+
+
 ### Now, process the model building information
-  temp.ltv <- loadestCheckLtv(data, Pvar, Rvar)
+  temp.ltv <- loadestCheckLtv(data, Pvar, Rvar) # Compute the percentage of censored values and the levels of censoring
   if(temp.ltv$pct > 80) {
     cat(" Percentage of censored values (", temp.ltv$pct, ") exceeds 80.\n")
     if(temp.ltv$zeros > 0)
@@ -126,22 +145,26 @@ menuLoadEstimation <- function(data, constit, detect, conc, load, flow, units,
     return()
   }
   ## save the data if requested
-  if(!missing(savefile) && savefile != "")
+  if(!missing(savefile) && savefile != ""){
     assign(savefile, data, where=1)
-  else
+  } else {
     savefile <- ""
+  }
+    
   if(build == "Predefined") {
     sname <- c(Rvar, Lvar, Dvar, flow, "DECTIME", Date, Time)
     process <- loadestimBuildAuto(data, sname, models.predefined, method,
                                   normal.plot, sl.plot, partial.plot, savefile)
-  }
-  else { # build == "Custom"
+
+##########################################################################################
+  } else { # build == "Custom"
     sname <- c(Rvar, Lvar, Dvar, flow, "DECTIME", Date, Time)
     process <- loadestimCalibrate(data, sname, flowtrans, floworder,
                                   lineartime, seasonal, period,
                                   addnlterms, diurnal, method,
                                   normal.plot, sl.plot, partial.plot, savefile)
   }
+  
   if(!missing(preddata)) {
     if(missing(season)) 
       season <- ""
