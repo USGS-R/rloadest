@@ -1,48 +1,18 @@
-Package: LOADEST
+Package: rloadest
 Type: Package
-Title: Runs LOADEST program in R
-Version: 1.0.0
-Date: 2012-08-01
+Title: River Load Estimation
+Version: 0.1.0
+Date: 2013-05-31
 Author: Dave Lorenz, Rob Runkel, Laura De Cicco
 Maintainer: Dave Lorenz <lorenz@usgs.gov>
-Description: Collection of functions to run LOADEST program
+Description: Collection of functions to make constituent load estimations
+ based on the LOADEST program.
 License: GPL-2
 Depends:
-    R (>= 2.14.0),
-    USGSqw
+    R (>= 3.0.0),
+    lubridate,
+    USGSwsBase,
+    USGSwsQW
 LazyLoad: yes
 LazyData: yes
-Collate:
-    'loadestConvFactor.R'
-    'packageDescription.R'
-    'loadestBuildAuto.R'
-    'loadestCalibrate.R'
-    'loadestCheckLtv.R'
-    'loadestCreateData.R'
-    'loadestEstimate.R'
-    'loadestEvalAMLE.R'
-    'loadestEvalLAD.R'
-    'loadestEvalMLE.R'
-    'loadestGrubbsBeck.R'
-    'loadestLeaps.R'
-    'loadestPlotAdditional.R'
-    'loadestPlotCondition.R'
-    'loadestPlotDaily.R'
-    'loadestPlotModel.R'
-    'loadestPlotRelations.R'
-    'loadestPrintEval.R'
-    'loadestPrintHeader.R'
-    'loadestPrintMethod.R'
-    'loadestPrintStatus.R'
-    'loadestProcessInst.R'
-    'loadestQadj.R'
-    'loadestSelBest.R'
-    'loadestSelBreakpoint.R'
-    'loadestSelectData.R'
-    'loadestSetXLDat.R'
-    'loadestTadj.R'
-    'loadestUpdateStatus.R'
-    'loadestimBuildAuto.R'
-    'loadestimCalibrate.R'
-    'loadestimEstimate.R'
-    'loadestimPlotModel.R'
+

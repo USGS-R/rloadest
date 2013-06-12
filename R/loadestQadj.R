@@ -1,17 +1,28 @@
-# internal support function for S-LOADEST.
-#    Compute the adjustment to flow
-#
-# Coding history:
-#    2004Jan29 DLLorenz Original version for USGS library
-#    2004Oct29 DLLorenz Correctly compute Q*
-#    2005Oct03 DLLorenz allow for constant flow
-#    2005Dec05 DLLorenz allow missing values in flow (removed later)
-#    2005Dec05         This version.
-#
-loadestQadj <- function(x) {
+#' Center Flow
+#' 
+#' Internal support function for rloadest that computes
+#'the adjustment to flow.
+#'
+#' @param x the calibration flow data.
+#' @param round either a numeric value indicating the number
+#'of decimal places, or a list containing a value indicating
+#'the number of decimal places. If \code{NULL}, then do no round.
+#'
+#' @return The centering value for flow.
+#'
+loadestQadj <- function(x, round=options("round.flow")) {
+  ## Coding history:
+  ##    2013May31 DLLorenz Original version from S+ library
+  ##
   Q <- log(x)
   meanQ <- mean(Q, na.rm=T)
   Qstar <- meanQ + sum((Q - meanQ)^3) / 2 / sum((Q - meanQ)^2)
-  if(is.na(Qstar)) Qstar <- meanQ # allow for constant flow
-  return(exp(Qstar))
+  if(is.na(Qstar)) Qstar <- meanQ # Allow for constant flow
+  retval <- exp(Qstar)
+  if(is.list(round))
+    round <- round[[1L]]
+  if(!is.null(round)) {
+    retval <- round(retval, round)
+  }
+  return(retval)
 }

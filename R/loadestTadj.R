@@ -1,18 +1,32 @@
-# internal support function for S-LOADEST.
-#    Compute the adjustment to time
-#
-# Coding history:
-#    2004Jan29 DLLorenz Original version for USGS library
-#    2004Oct29 DLLorenz Correctly compute t*
-#    2005Dec02 DLLorenz Allow NAs (removed later)
-#    2005Dec02          This version.
-#
-loadestTadj <- function(x) {
-  ## two values are needed, the first produces a reference year (for sin and
-  ## cos transforms), the second corrects to centered time
+#' Center Time
+#' 
+#' Internal support function for rloadest that computes
+#'the adjustment to time.
+#'
+#' @param x the calibration date data.
+#' @param round either a numeric value indicating the number
+#'of decimal places, or a list containing a value indicating
+#'the number of decimal places. If \code{NULL}, then do no round.
+#'
+#' @return A vector of length 2 containing the base (reference)
+#'year and the centering time correction value. The user value
+#'for centered time would be sum.
+#'
+loadestTadj <- function(x, round=options("round.time")) {
+  ## Coding history:
+  ##    2013May31 DLLorenz Original version from S+ library
+  ##
+  x <- dectime(x)
   Tadj <- c(0,0)
-  Tadj[1] <- floor(min(x, na.rm=T))
-  meant <- mean(x,na.rm=T)
-  Tadj[2] <- mean(x - Tadj[1], na.rm=T) + sum((x - meant)^3) / 2 / sum((x - meant)^2)
-  return(Tadj)
+  Tadj[1L] <- floor(min(x, na.rm=TRUE))
+  meant <- mean(x, na.rm=TRUE)
+  Tadj[2L] <- mean(x - Tadj[1], na.rm=TRUE) + 
+    sum((x - meant)^3) / 2 / sum((x - meant)^2)
+  retval <- Tadj
+  if(is.list(round))
+    round <- round[[1L]]
+  if(!is.null(round)) {
+    retval <- round(retval, round)
+  }
+  return(retval)
 }
