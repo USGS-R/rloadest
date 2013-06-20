@@ -21,8 +21,8 @@ print.loadReg <- function(x, digits=4, brief=TRUE, load.only=brief, ...) {
   ##    2013May31 DLLorenz Original Coding
   ##
   ## Explanations of model terms
-  Explan <- c(lnQ="Ln(Q) - center of Ln(Q)",
-             lnQ2="(Ln(Q) - center of Ln(Q))^2",
+  Explan <- c(lnQ="ln(Q) - center of ln(Q)",
+             lnQ2="ln(Q) - center of ln(Q))^2",
              DECTIME="decimal time - center of decimal time",
              DECTIME2="(decimal time - center of decimal time)^2",
              sin.DECTIME="sine(2 * pi * decimal time)",
@@ -61,7 +61,7 @@ print.loadReg <- function(x, digits=4, brief=TRUE, load.only=brief, ...) {
   if(!brief || nrow(x$model.eval) > 1) { # Capture best model selection
     cat("Model Evaluation Criteria Based on ", x$method, " Results\n",
         "-----------------------------------------------\n\n", sep="")
-    print(x$model.eval)
+    print(x$model.eval, digits=digits)
     cat("Model # ", x$model.no, " selected\n\n", sep="")
   }
   cat("Selected Load Model:\n--------------------\n\n")

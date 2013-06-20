@@ -67,6 +67,8 @@
 *
 *     Compute CV_M and then the load
 *
+         CV_M(NPAR+1,NPAR+1) = PARMLE(NPAR+1)**2 *
+     &         CV(NPAR+1,NPAR+1)
          DO I=1,NPAR
             CV_M(I,NPAR+1) = S3_M*CV(I,NPAR+1)
             CV_M(NPAR+1,I) = CV_M(I,NPAR+1)

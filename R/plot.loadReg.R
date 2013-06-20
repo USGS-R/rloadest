@@ -7,12 +7,12 @@
 #'plot is created for a single variable. Or \code{which} can be any of a sequence of numbers from 1 thorugh 7.
 #'Numeric values for \code{which}:
 #'\enumerate{
-#'\item Fitted with separate factor levels vs. Observed
+#'\item Observed vs. fitted.
 #'\item Fitted vs. Residual
 #'\item S-L plot
 #'\item A correlogram if dates are available in the model or in the data set
-#'\item Q-normal and Tukey boxplots for each factor level
-#'\item Influence plot
+#'\item Q-normal
+#'\item Tukey boxplots for oberved and estimated
 #'\item Partial residual plots for each explanatory variable
 #'}
 #'

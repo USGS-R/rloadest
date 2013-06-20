@@ -12,8 +12,9 @@
 #' @param fit the output from \code{loadReg}.
 #' @param newdata a data frame of the prediction variables.
 #' @param by the time frame for estimates.
-#' @param sd a character string indicating how to comute the 
-#'standard deviation of the total load estimates
+#' @param seopt a character string indicating how to comute the 
+#'standard error of the aggregated load estimates, must be either
+#'"exact" or "approximate." Only the first letter is necessary.
 #' @param allow.incomplete compute loads for periods withing
 #'missing values or incomplete record?
 #' @param print print a report summary of the load estimate?
@@ -22,8 +23,8 @@
 #' @useDynLib rloadest estlday
 #' @useDynLib rloadest estltot
 #' @export
-predLoad <- function(fit, newdata, load.units=fit$load.units, by="day", sd="exact",
-                     allow.incomplete=FALSE, print=FALSE) {
+predLoad <- function(fit, newdata, load.units=fit$load.units, by="day", 
+                     seopt="exact", allow.incomplete=FALSE, print=FALSE) {
   ## Coding history:
   ##    2013Jun06 DLLorenz Original Coding
   ##
@@ -32,6 +33,7 @@ predLoad <- function(fit, newdata, load.units=fit$load.units, by="day", sd="exac
   ## Need to possibly aggregate newdata by the time.step
   ## Not included in this version
   load.units
+  seopt <- match.arg(seopt, c("exact", "approximate"))
   lcf <- loadUnitConv(fit$load.units, load.units)
   Qadj <- fit$Qadj
   Tadj <- fit$Tadj
@@ -39,8 +41,9 @@ predLoad <- function(fit, newdata, load.units=fit$load.units, by="day", sd="exac
   dates <- fit$dates
   model.no <- fit$model.no
   if(model.no == 99L) {
-    # Do this later
-    stop("Sorry, no quite implemented yet")
+    Terms <- delete.response(fit$lfit$terms)
+    m <- model.frame(Terms, newdata, na.action = na.pass)
+    model.inp <- model.matrix(Terms, m)
   } else {
     model.inp <- setXLDat(newdata, flow, dates, Qadj, Tadj, model.no)
   }
@@ -53,12 +56,16 @@ predLoad <- function(fit, newdata, load.units=fit$load.units, by="day", sd="exac
     newdata[[by]] <- factor(Period, levels=unique(Period)) # Force date order
   } else if(byn == 4L) { # by water year
     by <- "_by_"
-    Period <- waterYear(newdata[[dates]])
+    Period <- paste("WY", waterYear(newdata[[dates]]), sep=" ")
     newdata[[by]] <- Period
   } else if(byn == 5L) { # by calendar year
     by <- "_by_"
-    Period <- year(newdata[[dates]])
+    Period <- paste("CY", year(newdata[[dates]]), sep=" ")
     newdata[[by]] <- Period
+  } else if(byn == 0L) {
+    ## Check to see that it is in newdata
+    if(!(by %in% names(newdata)))
+      stop(by, " not found in the estimation dataset")
   } else
     by <- ByOpt[byn]
   if(by == "day") { # should also be the logic for "unit"
@@ -132,7 +139,7 @@ predLoad <- function(fit, newdata, load.units=fit$load.units, by="day", sd="exac
                          npred=as.integer(length(KDays)),
                          xlpred=model.inp[KDays,],
                          NDAYS=NDIM,
-                         SDEXACT=sd=="exact",
+                         SDEXACT=seopt=="exact",
                          load=double(1L),
                          loadvar=double(1L),
                          loadlow=double(1L),
@@ -149,13 +156,15 @@ predLoad <- function(fit, newdata, load.units=fit$load.units, by="day", sd="exac
                          L95=out.data$loadlow * lcf, 
                          U95=out.data$loadup * lcf)
   } else { # Any other kind of aggregation
+    Flow <- newdata[[flow]] # Needed for summary
     retval <- tapply(seq(nrow(model.inp)), newdata[[by]], FUN=function(period) {
       ## For now, only 1 obs per day (assumed and hard coded)
       KDays <- period
       Flow <- newdata[period, flow]
       Sum <- rowSums(model.inp[period,]) # Use to detect any missing values
-      if(any(drop <- is.na(Sum)) && !allow.incomplete)
+      if(any(drop <- is.na(Sum)) && !allow.incomplete) {
         stop("Missing values in newdata")
+    }
       if(any(drop)) {
         KDays <- KDays[!drop]
         model.inp <- model.inp[KDays,]
@@ -175,7 +184,7 @@ predLoad <- function(fit, newdata, load.units=fit$load.units, by="day", sd="exac
                            npred=as.integer(length(KDays)),
                            xlpred=model.inp[KDays,],
                            NDAYS=NDIM,
-                           SDEXACT=sd=="exact",
+                           SDEXACT=seopt=="exact",
                            load=double(1L),
                            loadvar=double(1L),
                            loadlow=double(1L),
@@ -193,17 +202,18 @@ predLoad <- function(fit, newdata, load.units=fit$load.units, by="day", sd="exac
                            U95=out.data$loadup * lcf)
       
     })
-    Period <- names(revtal)
+    Period <- names(retval)
     retval <- do.call(rbind, retval)
     retval$Period <- Period
   }
+  rownames(retval) <- NULL
   if(print) {
     Date <- newdata[[dates]]
-    cat("\n---------------------------------------------------------------------------------------------------------\n",
+    cat("\n---------------------------------------------------------------------\n",
         "Constituent Output File Part IIa: Estimation (test for extrapolation)\n",
         " Load Estimates for ", as.character(min(Date)),
         " to ", as.character(max(Date)), "\n", 
-        "---------------------------------------------------------------------------------------------------------\n\n",
+        "---------------------------------------------------------------------\n\n",
         sep="")
     cat("Streamflow Summary Statistics\n",
         "-------------------------------------------?\n\n", sep="")
@@ -218,18 +228,18 @@ predLoad <- function(fit, newdata, load.units=fit$load.units, by="day", sd="exac
           "calibration data set streamflow. No extrapolation is required.\n\n",
           sep="")
     if(!(by %in% c("day", "unit"))) {
-      cat("\n---------------------------------------------------------------------------------------------------------\n",
+      cat("\n-------------------------------------------------------------\n",
           "Constituent Output File Part IIb: Estimation (Load Estimates)\n",
           " Load Estimates for ", as.character(min(Date)),
           " to ", as.character(max(Date)), "\n", 
-          "---------------------------------------------------------------------------------------------------------\n\n",
+          "---------------------------------------------------------------\n\n",
           sep="")
-      cat("Load Estimates, in ", load.units, ", using ",
+      cat("Flux Estimates, in ", load.units, "/d, using ",
           fit$lfit$method,
-          "\n------------------------------------\n\n", sep="")
+          "\n----------------------------------------\n\n", sep="")
       print(retval)
     } else
-      cat("Load Estimates for daily or instantaneous values not printed\n\n")
+      cat("Estimates for daily or instantaneous values not printed\n\n")
   }
   invisible(retval)
 }

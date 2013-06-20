@@ -49,7 +49,7 @@ loadReg <- function(formula, data, subset, na.action, flow, dates,
   m <- match.call(expand.dots = FALSE)
   ## remove components not needed for model.frame
   m$flow <- m$dates  <- m$flow.units <- m$conc.units <- NULL
-  m$load.units <- m$time.step <- NULL
+  m$load.units <- m$time.step <- m$station <- NULL
   m[[1L]] <- as.name("model.frame")
   if(is.null(indMod)) { # User-defined model
     model.no <- 99L
@@ -82,8 +82,6 @@ loadReg <- function(formula, data, subset, na.action, flow, dates,
       Time <- Time[-saved.na.action]
     }
     PoR <- range(Time)
-    if(class(time)[1] == "Date")
-      Time <- Time + 0.5
     Qadj <- loadestQadj(Flow)
     Tadj <- loadestTadj(Time)
   } else { # predefined model
@@ -146,10 +144,24 @@ loadReg <- function(formula, data, subset, na.action, flow, dates,
   else if(class(Y) == "lcens" && !is.null(saved.na.action))
     Y@censor.codes <- Y@censor.codes[-saved.na.action]
   ## Logic checks for time.step and class of Time
-  if(class(Time)[1] != "Date" && time.step == "day")
+  if(class(Time)[1L] != "Date" && time.step == "day")
     warning("For time.step = \"day,\" the class of dates should be \"Date\"")
-  else if(class(Time)[1] == "Date" && time.step != "day")
+  else if(class(Time)[1L] == "Date" && time.step != "day")
     warning("For time.step less than \"day,\" the class of dates should be \"POXIXt\"")
+  if(time.step == "day") { # Check that no duplicate days and appropriate gap
+    Time <- as.Date(Time)
+    Tdifs <- c(999L, diff(as.integer(Time)))
+    if(any(Tdifs == 0L)) {
+      Dys <- as.character(unique(Time[Tdifs == 0L]))
+      Dys <- paste(Dys, collapse="\n")
+      stop("Duplicated days not permitted for time.step = \"day\"\n", Dys)
+    }
+    Tdys <- min(Tdifs)
+    if(Tdys < 7)
+      warning("The minimum spacing between daily loads is ", Tdys,
+              " days. The time between observations should be at least ",
+              " 7 days to avoid autocorrelation issues.")
+  } # Need unit checks too
   ## OK, construct the concentration fit
   if(class(Y) == "lcens") {
     cfit <- censReg_AMLE.fit(Y, X, "lognormal")
