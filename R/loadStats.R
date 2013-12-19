@@ -10,6 +10,13 @@
 #'statistics.
 #' @seealso \code{\link{loadReg}}
 #' @keywords utilities
+#' @examples
+#'# From application 1 in the vignettes
+#'data(app1.calib)
+#'app1.lr <- loadReg(Phosphorus ~ model(1), data = app1.calib, 
+#'  flow = "FLOW", dates = "DATES", conc.units="mg/L",
+#'  station="Illinois River at Marseilles, Ill.")
+#'loadStats(app1.lr)
 #' @export
 loadStats <- function(fit, which="load") {
   ## Compute some stats
@@ -28,7 +35,7 @@ loadStats <- function(fit, which="load") {
   colnames(outSum)[c(1L, 7L)] <- c("Min", "Max")
   ## Compute the bias diagnostics
   PLR <- sum(Est)/sum(Obs)
-  E <- 1 - sum((Obs - Est)^2)/sum((Obs-mean(Obs))^2)
+  E <- nashSutcliffe(Obs, Est)
   Bp <- 100*(PLR - 1)
   outBias <- c(Bp, PLR, E)
   if(which == "load")

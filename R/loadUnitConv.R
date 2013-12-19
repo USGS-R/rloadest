@@ -6,7 +6,7 @@
 #'convert from.
 #' @param to character string describing the load units to 
 #'convert to.
-#' @keywords conversions
+#' @keywords unit conversions
 #' @return The conversion factor.
 #' @examples
 #' loadUnitConv("kilograms", "tons")

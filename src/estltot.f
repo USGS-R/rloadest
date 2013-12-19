@@ -6,7 +6,7 @@
 *
 ************************************************************************
       SUBROUTINE estltot(NPAR,PARMLE,BIAS,CV_IN,SBIAS,SCV_IN,
-     &     NPRED,XLPRED,NDAYS,SDEXACT,
+     &     NPRED,XLPRED,NDAYS,N_DAY,SDEXACT,
      &     LOAD,LOADVAR,LOADLOW,LOADUP,LOADSP,IERR)
 *     
 *     dimensional parameters and logical devices
@@ -15,7 +15,7 @@
 *
 *     subroutine arguments
 *
-      INTEGER*4 NPAR,NPRED,NDAYS,IERR
+      INTEGER*4 NPAR,NPRED,NDAYS,N_DAY,IERR
       LOGICAL SDEXACT
       DOUBLE PRECISION PARMLE(*),BIAS(*),CV_IN(NPAR+1, *),SBIAS(*),
      &     SCV_IN(NPAR+1, *),XLPRED(NPRED,*)
@@ -86,7 +86,7 @@
 *     uncorrelated lag 1 (approx correct for mid-size rivers -- see
 *     Tim Cohn 1989 notes)
 *     
-      CALL LOADSEP(NPRED,MVUE,S2,LOADVAR,LOADSP)
+      CALL LOADSEP(N_DAY,NPRED,MVUE,S2,LOADVAR,LOADSP)
       LOADVAR = LOADVAR/(NDAYS*NDAYS)
 *
 *     Compute approx 95% confidence interval around true load

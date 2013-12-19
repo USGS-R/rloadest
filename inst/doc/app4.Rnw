@@ -1,0 +1,250 @@
+\documentclass{article}
+\parskip 3pt
+%\VignetteIndexEntry{Example Application 4}
+%\VignetteDepends{rloadest}
+
+\begin{document}
+\SweaveOpts{concordance=TRUE}
+\raggedright
+\parindent 30 pt
+
+\title{Application 4: Automated Model Selection}
+
+\author{Dave Lorenz}
+
+\maketitle
+
+This example illustrates the the automated model selection function. The example calibration data set include 4 constituents that include uncensored, Atra (atrazine); slightly censored, Alach (alachlor); highly censored, Buty (butlyate); and data having missing observations, SuspSed (suspended sediment).
+
+The data used in this application were collected from the White River at Hazleton, Indiana. Forty five water-quality samples collected between October 1992 and September 1994 are used in conjunction with observed streamflow data to build the regression model.
+
+Part 2 illustrates the seasonal-wave approach to modeling the seasonal pattern of pesticides. The user may wish to explore the seasonal-wave analysis for atrazine and alachor, both of which indicate a strong periodic seasonal lack of fit when using only the sine and cosine seasonl terms.
+
+<<echo=TRUE>>=
+# Load the rloadest package and the data
+library(rloadest)
+data(app4.calib)
+head(app4.calib)
+@
+
+The censored data in \texttt{app4.calib} are stored in 2 columns---the recorded value in the column identified by the constituent abbreviation and the remark code, "<" indicating a less-than value in the corresponding column  with the .rmk suffix. In order to take advantage of the of \texttt{loadReg} function to automatically recognize censored data, the censored data in the example dataset should be converted to type "water-quality." This can be done using the \texttt{convert2qw} function in the \texttt{USGSwsQW} package, which is required by \texttt{rloadest}. The naming convention in \texttt{app.calib} is consistent with the "partial" scheme for \texttt{convert2qw}. The conversion is accomplished in the R code below. The \texttt{app4.calib} is overwritten with the new data.
+
+<<echo=TRUE>>=
+# Convert Buty and Alach to class "qw"
+app4.calib <- convert2qw(app4.calib, scheme="partial")
+head(app4.calib)
+@
+
+\eject
+\section{Build the Model}
+
+The \texttt{selBestModel} function can be used to select the predefined model with the smallest AIC value. It also records the SPPC value, also known as BIC, which has a greater penalty for additional terms and will generally choose a more parsimonious model. The requirements for \texttt{selBestModel} are similar to \texttt{loadReg}, except that the name of the constituent is requires instead of the formula.
+
+<<echo=TRUE>>=
+# Create the "best" load model.
+app4.lr <- selBestModel("Buty", data = app4.calib, flow = "FLOW", 
+                   dates = "DATES", conc.units="ug/L",
+                   station="White River at Hazleton, Ind.")
+# Print the warning in the vignette
+warnings()
+# Print the results
+app4.lr
+@
+
+The model with the lowest AIC value is 7, which includes linear flow, linear time and the seasonal time terms. Model 7 also has the smallest SPCC value, but model 4 is only slightly larger (requires 2 decimal digits to see the difference recorded in the \texttt{model.eval} component in the output object).
+
+
+\eject
+\section{Diagnostic Plots}
+
+The rloadest package contains a \texttt{plot} function that creates diagnostic plots of the load model. Most often the user will just enter \texttt{plot(app4.lr)} (for this example) in the R Console window to generate the full suite of plots, but this example application will generate each plot individually. And, in general, the user will not need to set up a graphics device. But for this vignette, the graphics device must be set up for each graph.
+
+Figure 1 shows the response versus the fitted values, censored observations are shown by open circles. It is perhaps a bit disconcerting that there are no censored observations below the dashed regression line for fitted values less than about -3, but that is not inconceivable. That discrepancy in the location of censored values also drives the appearance of greater scatter in larger fitted values; plots 2 and 3 are not shown.
+
+<<echo=TRUE>>=
+# setSweave is required for the vignette.
+setSweave("app4_01", 5, 5)
+plot(app4.lr, which=1, set.up=FALSE)
+graphics.off()
+@
+<<results=tex, echo=FALSE>>=
+cat("\\includegraphics{app4_01.pdf}\n")
+cat("\\paragraph{}\n")
+@
+
+\textbf{Figure 1.} The rating-curve regression model.
+
+\eject
+Figure 2 is the correlogram. It suggests a seasonal lack of fit, although the shape of the smooth line is not conclusive.
+
+<<echo=TRUE>>=
+# setSweave is required for the vignette.
+setSweave("app4_02", 5, 5)
+plot(app4.lr, which=4, set.up=FALSE)
+graphics.off()
+@
+<<results=tex, echo=FALSE>>=
+cat("\\includegraphics{app4_02.pdf}\n")
+cat("\\paragraph{}\n")
+@
+
+\textbf{Figure 2.} The correlogram.
+
+\eject
+Figure 3 is q-normal plot and shows the standardized residuals, which are assumed to have a standard deviation of 1. The solid line is the theoretical fit of mean of 0 and standard deviation of 1. The visual appearance of figure 5 confirms the results of the PPCC test in the printed output---the residuals show deviation from the normal distribution. The open circles are censored observations and the plotted value is the expected value returned by the \texttt{residuals} functions using the argument \texttt{type} set to "working."
+
+<<echo=TRUE>>=
+# setSweave is required for the vignette.
+setSweave("app4_03", 5, 5)
+plot(app4.lr, which=5, set.up=FALSE)
+graphics.off()
+@
+<<results=tex, echo=FALSE>>=
+cat("\\includegraphics{app4_03.pdf}\n")
+cat("\\paragraph{}\n")
+@
+
+\textbf{Figure 3.} The Q-normal plot of the residuals.
+
+\eject
+Figure 4 is an extended box plot---a truncated box plot, at the 5 and 95 percentiles that shows the individual values larger than the 95th percentile and smaller than the 5th percentile. The box plots in figure 6 show the distributions of the actual and estimated loads. The appearance of these box plots helps to understand the printed bias diagnostics, which show a general over estimate. The upper and lower ends of both boxes are similar, but the box plot of the estimates shows a median value which is much larger than the median value for the observed values. Therefore, the middle range is over estimated.
+
+<<echo=TRUE>>=
+# setSweave is required for the vignette.
+setSweave("app4_04", 5, 5)
+plot(app4.lr, which=6, set.up=FALSE)
+graphics.off()
+@
+<<results=tex, echo=FALSE>>=
+cat("\\includegraphics{app4_04.pdf}\n")
+cat("\\paragraph{}\n")
+@
+
+\textbf{Figure 4.} Box plot comparing estimated and observed values.
+
+\eject
+\section{Part 2, Building a Seasonal-wave Load Model}
+
+All of the diagnostic plots in the previous section indicated a cause for concern about the validity of the periodic regression model. Vecchia and others (2008) describe a seasonal-wave function that often works well for pesticide models.
+
+The USGSwsStats package contains the tools necessary to construct a seasonal-wave model. Building a good regression model is a multi-step process, required identifying the timing of the peak concentration and the other parameters of the seasonal-wave model.
+
+The first step in constructing the seasonal-wave model is the identify the peak and potential values for the other parameters of the model. That involves building a regression model without any seasonal terms, and using the \texttt{seasonalPeak} function on the residuals to construct a first guess on those parameters. In this case, because there are censored values, we must use \texttt{censReg}. Note that it does not matter whether we use load or concentration because the residuals are the same.
+
+<<echo=TRUE>>=
+# Create the limited regression model.
+app4.cr <- censReg(log(Buty) ~ center(log(FLOW)) + dectime(DATES), 
+                   data = app4.calib)
+app4.sp <- seasonalPeak(dectime(app4.calib$DATES), residuals(app4.cr))
+app4.sp
+@
+
+The next step in constructing the seasonal-wave model is to confirm the peak. This step requires the \texttt{confirm} function, which is interactive and cannot be demonstrated in a vignette. In this case, we can accept the default selection and estimated parameters. The user should step through the interactive process.
+
+<<echo=TRUE>>=
+# Show the plot for this example
+setSweave("app4_05", 5, 5)
+confirm(app4.sp, plot.only=TRUE)
+graphics.off()
+# Confirm the seasonalPeak analysis for a single peak.
+app4.sp <- confirm(app4.sp, all=TRUE)
+app4.sp
+@
+<<results=tex, echo=FALSE>>=
+cat("\\includegraphics{app4_05.pdf}\n")
+cat("\\paragraph{}\n")
+@
+
+\textbf{Figure 5.} The seasonal peak graph.
+
+The \texttt{selBestWave} function can be used to select the "best" parameters for the seasonal-wave model. It requires a column in decimal time format. The following code adds the column \texttt{Dectime} and executes \texttt{selBestWave}. The results from \texttt{selBestWave} are simply printed, but could be saved. Even though the timing of the peak is pretty clear from the graph, we'll take advantage of the exhaustive search to find the "best" peak too.
+
+<<echo=TRUE>>=
+# Add Dectime.
+app4.calib <- transform(app4.calib, Dectime=dectime(DATES))
+# Find the best model
+selBestWave(log(Buty) ~ center(log(FLOW)) + dectime(DATES), 
+            data = app4.calib,
+            "Dectime", app4.sp, exhaustive=TRUE, Regression=censReg)
+@
+
+The "best" model has the timing of the peak at about 0.393, a pesticide loading period of 1 months and a decay rate indicated by a half-life of 1 month (the fastest decay rate among the default choices). We are now ready to build and evaluate the seasonal-wave load model.
+
+<<echo=TRUE>>=
+# Create and print the seasonal-wave load model.
+# Note that we can use Dectime directly in this model
+app4.lrsw <- loadReg(Buty ~ center(log(FLOW)) + Dectime +
+                     seasonalWave(Dectime, 0.393, 1, 1), 
+                     data = app4.calib, flow = "FLOW", 
+                     dates = "DATES", conc.units="ug/L", 
+                     station="White River at Hazleton, Ind.")
+app4.lrsw
+@
+
+The Bias Diagnostics indicate a much better fit for this model than the  seasonal model originally fit. The diagnostic plots confirm the improvement in the fit.
+
+\eject
+Figure 6 shows the response versus the fitted values, censored observations are shown by open circles. It is still a bit disconcerting that there is only one censored observation below the dashed regression line for fitted values less than about -3. That discrepancy in the location of censored values also drives the appearance of greater scatter in larger fitted values; plots 2 and 3 are not shown.
+
+<<echo=TRUE>>=
+# setSweave is required for the vignette.
+setSweave("app4_06", 5, 5)
+plot(app4.lrsw, which=1, set.up=FALSE)
+graphics.off()
+@
+<<results=tex, echo=FALSE>>=
+cat("\\includegraphics{app4_06.pdf}\n")
+cat("\\paragraph{}\n")
+@
+
+\textbf{Figure 6.} The rating-curve regression model using a seasonal wave.
+
+\eject
+Figure 7 is the correlogram. It does not suggest a seasonal lack of fit, but the smooth line is not as flat as one would like.
+
+<<echo=TRUE>>=
+# setSweave is required for the vignette.
+setSweave("app4_07", 5, 5)
+plot(app4.lrsw, which=4, set.up=FALSE)
+graphics.off()
+@
+<<results=tex, echo=FALSE>>=
+cat("\\includegraphics{app4_07.pdf}\n")
+cat("\\paragraph{}\n")
+@
+
+\textbf{Figure 7.} The correlogram for the model using a seasonal wave.
+
+\eject
+Figure 8 is q-normal plot and shows the standardized residuals. The visual appearance of figure 8 confirms the results of the PPCC test in the printed output---the residuals show little deviation from the normal distribution, but there is one outlying observation. The open circles are censored observations and the plotted value is the expected value returned by the \texttt{residuals} functions using the argument \texttt{type} set to "working."
+
+<<echo=TRUE>>=
+# setSweave is required for the vignette.
+setSweave("app4_08", 5, 5)
+plot(app4.lrsw, which=5, set.up=FALSE)
+graphics.off()
+@
+<<results=tex, echo=FALSE>>=
+cat("\\includegraphics{app4_08.pdf}\n")
+cat("\\paragraph{}\n")
+@
+
+\textbf{Figure 8.} The Q-normal plot of the residuals for the model using a seasonal wave.
+
+\eject
+Figure 9 is an extended box plot---a truncated box plot, at the 5 and 95 percentiles that shows the individual values larger than the 95th percentile and smaller than the 5th percentile. The box plots in figure 6 show the distributions of the actual and estimated loads. The appearance of these box plots helps to understand the printed bias diagnostics, which show a small over estimate. The upper and lower ends of of the estimated values extend beyond the observed values and the box plot of the estimates shows a median value which is a bit larger than the median value for the observed values. Therefore, the middle and upper ranges are slightly over estimated. But the overall over estimate is less than 10 percent.
+
+<<echo=TRUE>>=
+# setSweave is required for the vignette.
+setSweave("app4_09", 5, 5)
+plot(app4.lrsw, which=6, set.up=FALSE)
+graphics.off()
+@
+<<results=tex, echo=FALSE>>=
+cat("\\includegraphics{app4_09.pdf}\n")
+cat("\\paragraph{}\n")
+@
+
+\textbf{Figure 9.} Box plot comparing estimated and observed values for the model using a seasonal wave.
+
+\end{document}

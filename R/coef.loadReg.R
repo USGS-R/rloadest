@@ -14,6 +14,15 @@
 #' @note The attained p-values are computed from the log-likelihood test for
 #'AMLE regression and from a Wald chi-square test for MLE regression.
 #' @seealso \code{\link{loadReg}},
+#' @keywords regression
+#' @examples
+#'# From application 1 in the vignettes
+#'data(app1.calib)
+#'app1.lr <- loadReg(Phosphorus ~ model(1), data = app1.calib, 
+#'  flow = "FLOW", dates = "DATES", conc.units="mg/L",
+#'  station="Illinois River at Marseilles, Ill.")
+#'# Extract the coefficients
+#'coef(app1.lr)
 #' @S3method coef loadReg
 #' @method coef loadReg
 coef.loadReg <- function(object, summary=FALSE, which="load", ...) {

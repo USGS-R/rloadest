@@ -1,0 +1,24 @@
+\name{loadestTadj}
+\alias{loadestTadj}
+\title{Center Time}
+\usage{
+  loadestTadj(x, round = options("round.time"))
+}
+\arguments{
+  \item{x}{the calibration date data.}
+
+  \item{round}{either a numeric value indicating the number
+  of decimal places, or a list containing a value
+  indicating the number of decimal places. If \code{NULL},
+  then do no round.}
+}
+\value{
+  A vector of length 2 containing the base (reference) year
+  and the centering time correction value. The user value
+  for centered time would be sum.
+}
+\description{
+  Internal support function for rloadest that computes the
+  adjustment to time.
+}
+

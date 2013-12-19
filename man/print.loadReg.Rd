@@ -1,0 +1,38 @@
+\name{print.loadReg}
+\alias{print.loadReg}
+\title{Print Results}
+\usage{
+  \method{print}{loadReg} (x, digits = 4, brief = TRUE,
+    load.only = brief, ...)
+}
+\arguments{
+  \item{x}{an object of class "loadReg"---output from
+  \code{loadReg}.}
+
+  \item{digits}{the number of significant digits to print.}
+
+  \item{brief}{print the brief output? See \bold{Note}.}
+
+  \item{load.only}{print only the load model and not
+  concentration model results.}
+
+  \item{\dots}{further arguments passed to or from other
+  methods.}
+}
+\value{
+  The object \code{x} is returned invisibly.
+}
+\description{
+  Print the results of an load rating-curve regression.
+}
+\note{
+  The printed output includes the call, the coefficent
+  table, the estimated residual standard error, the
+  log-likelihood of the model and null model with the
+  attained p-value, and the computational method.
+}
+\seealso{
+  \code{\link{loadReg}}
+}
+\keyword{utilities}
+

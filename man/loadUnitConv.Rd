@@ -1,0 +1,25 @@
+\name{loadUnitConv}
+\alias{loadUnitConv}
+\title{Unit Conversion}
+\usage{
+  loadUnitConv(from, to)
+}
+\arguments{
+  \item{from}{character string describing the load units to
+  convert from.}
+
+  \item{to}{character string describing the load units to
+  convert to.}
+}
+\value{
+  The conversion factor.
+}
+\description{
+  Computes the factor to convert from between load units.
+}
+\examples{
+loadUnitConv("kilograms", "tons")
+}
+\keyword{conversions}
+\keyword{unit}
+

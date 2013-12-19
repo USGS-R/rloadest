@@ -16,14 +16,29 @@
 #'\item Partial residual plots for each explanatory variable
 #'}
 #'
-#'@param x an object of class "loadReg"---output from \code{loadReg}
-#'@param which either "All" or any of a sequence from 1 to 7 indicating which plot, see \bold{Details}.
-#'@param set.up set up the graphics page?
-#'@param span the span to use for the loess smooth. Set to 0 to suppress.
-#'@param \dots further arguments passed to or from other methods.
-#'@return The object \code{x} is returned invisibly.
-#'@seealso \code{\link{censReg}}
-#'@keywords regression hplot
+#' @param x an object of class "loadReg"---output from \code{loadReg}
+#' @param which either "All" or any of a sequence from 1 to 7 indicating which plot, see \bold{Details}.
+#' @param set.up set up the graphics page?
+#' @param span the span to use for the loess smooth. Set to 0 to suppress.
+#' @param \dots further arguments passed to or from other methods.
+#' @return The object \code{x} is returned invisibly.
+#' @note This plotting function uses the core routines in the \code{USGSwsGraphs}
+#'package. It requires a graphics page that is set up from the functions
+#'in that package (\code{setpage} or \code{setPDF}) if \code{set.up} is
+#'\code{FALSE}. The graphs that are produced by this function are based 
+#'on the publication guidelines of the USGS.
+#' @seealso \code{\link{censReg}}, \code{\link{setPage}}, \code{\link{setPDF}}
+#' @keywords regression hplot
+#' @examples
+#'# From application 1 in the vignettes
+#'\dontrun{
+#'data(app1.calib)
+#'app1.lr <- loadReg(Phosphorus ~ model(1), data = app1.calib, 
+#'  flow = "FLOW", dates = "DATES", conc.units="mg/L",
+#'  station="Illinois River at Marseilles, Ill.")
+#'# Produce the full suite of diagnostic plots
+#'plot(app1.lr)
+#'}
 #'@S3method plot loadReg
 #'@method plot loadReg
 plot.loadReg <- function(x, which='All', set.up=TRUE, span=1.0, ...) {
@@ -66,6 +81,7 @@ plot.loadReg <- function(x, which='All', set.up=TRUE, span=1.0, ...) {
   if(doPlot[7L]) {
     xpred <- x$lfit$XLCAL[, -1L, drop=FALSE]
     xparm <- x$lfit$PARAML[-1L]
+    names(xparm) <- c(names(xpred), ".VAR.")
     names(xparm) <- c(dimnames(xpred)[[2L]], "Scale")
     if(!do7) # get all explanatory variable names
       xnames <- dimnames(xpred)[[2L]]

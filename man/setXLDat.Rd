@@ -1,0 +1,32 @@
+\name{setXLDat}
+\alias{setXLDat}
+\title{Model Matrix}
+\usage{
+  setXLDat(data, flow, dates, Qadj, Tadj, model.no)
+}
+\arguments{
+  \item{data}{the dataset containing dates and flow
+  columns.}
+
+  \item{flow}{character string indicating the name of the
+  flow column.}
+
+  \item{dates}{character string indicating the name of the
+  date column.}
+
+  \item{Qadj}{the centering value for flow.}
+
+  \item{Tadj}{the centering value for decimal time.}
+
+  \item{model.no}{the model number, must be in the range
+  1-9.}
+}
+\value{
+  The model matrix corresponding to the selected model
+  number.
+}
+\description{
+  Internal support function to extract the model matrix for
+  one of the 9 predefined models in LOADEST.
+}
+

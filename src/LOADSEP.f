@@ -22,14 +22,15 @@
 *
 *     If we ever figure out how to estimate RHO, then this routine
 *     will need to be updated. (Tim Cohn 01/24/2002). Modified
-*     21 JANUARY 2002 by T.Cohn.
+*     21 JANUARY 2002 by T.Cohn. Modified 09 July, 2013 by D.L.Lorenz
+*     to work correctly with time steps less than 1 day.
 *
 ************************************************************************
-      SUBROUTINE LOADSEP(NUMOBSE,PLDAML,S2,XLOADVAR,SEP)
+      SUBROUTINE LOADSEP(N_DAY,NUMOBSE,PLDAML,S2,XLOADVAR,SEP)
 *
 *     subroutine args
 *
-      INTEGER*4 NUMOBSE
+      INTEGER*4 N_DAY, NUMOBSE
       DOUBLE PRECISION S2,XLOADVAR,SEP,PLDAML(*)
 *
 *     local vars
@@ -46,7 +47,7 @@
 *     is ommitted here as "we lack the data to fit a larger AR model"
 *
       DO 10 I=1,NUMOBSE
-          SEP = SEP + PLDAML(I)**2 * (EXP(S2)-1.D0)   
+          SEP = SEP + PLDAML(I)**2 * (EXP(S2)-1.D0) * DBLE(N_DAY)
  10   CONTINUE
       SEP  = SQRT(SEP)/DBLE(NUMOBSE)
 

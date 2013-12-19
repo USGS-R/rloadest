@@ -6,7 +6,7 @@
 #' @param flow.units character string describing the flow unit
 #' @param conc.units character string describing the concentration unit
 #' @param load.units character string describing the load unit
-#' @keywords conversions
+#' @keywords unit conversions
 #' @return The conversion factor.
 #' @examples
 #' loadConvFactor("cubic meter per second","milligrams per liter","pounds")

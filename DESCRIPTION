@@ -6,13 +6,41 @@ Date: 2013-05-31
 Author: Dave Lorenz, Rob Runkel, Laura De Cicco
 Maintainer: Dave Lorenz <lorenz@usgs.gov>
 Description: Collection of functions to make constituent load estimations
- based on the LOADEST program.
+    based on the LOADEST program.
 License: GPL-2
 Depends:
     R (>= 3.0.0),
+    digest,
     lubridate,
     USGSwsBase,
     USGSwsQW
 LazyLoad: yes
 LazyData: yes
-
+Collate:
+    'loadConvFactor.R'
+    'loadestQadj.R'
+    'loadestTadj.R'
+    'loadReg.R'
+    'loadStats.R'
+    'loadUnitConv.R'
+    'model.R'
+    'packageDescription.R'
+    'plot.loadReg.R'
+    'predLoad.R'
+    'print.loadReg.R'
+    'setXLDat.R'
+    'center.R'
+    'makepredictcall.center.R'
+    'residuals.loadReg.R'
+    'coef.loadReg.R'
+    'mean.R'
+    'predConc.R'
+    'fitted.loadReg.R'
+    'logLik.loadReg.R'
+    'rmse.loadReg.R'
+    'selBestModel.R'
+    'vif.loadReg.R'
+    'c2load.R'
+    'loadReport.R'
+    'dailyAg.R'
+    'nashSutcliffe.R'

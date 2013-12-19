@@ -29,8 +29,13 @@
 #' @references will need some.
 #' @keywords regression censored loads
 #' @examples
-#'# Need a better one than this
-#'# Direct to vignettes
+#'# From application 1 in the vignettes
+#'data(app1.calib)
+#'app1.lr <- loadReg(Phosphorus ~ model(1), data = app1.calib, 
+#'  flow = "FLOW", dates = "DATES", conc.units="mg/L",
+#'  station="Illinois River at Marseilles, Ill.")
+#'print(app1.lr)
+#'
 #'@export
 loadReg <- function(formula, data, subset, na.action, flow, dates,
                     flow.units="cfs", conc.units="", load.units="kg", 
@@ -74,7 +79,7 @@ loadReg <- function(formula, data, subset, na.action, flow, dates,
     if(missing(subset)) 
       subset <- seq(nrow(data))
     else
-      subset <- eval(subset, data)
+      subset <- eval(substitute(subset), data)
     Flow <- data[subset, flow]
     Time <- data[subset, dates]
     if(!is.null(saved.na.action)) {
@@ -161,7 +166,14 @@ loadReg <- function(formula, data, subset, na.action, flow, dates,
       warning("The minimum spacing between daily loads is ", Tdys,
               " days. The time between observations should be at least ",
               " 7 days to avoid autocorrelation issues.")
-  } # Need unit checks too
+  } else { # Need unit checks too
+    Tdys <- difftime(Time, shiftData(Time), units="days")
+    Tdys <- min(Tdys, na.rm=TRUE)
+    if(Tdys < 7)
+      warning("The minimum spacing between daily loads is ", Tdys,
+              " days. The time between observations should be at least ",
+              " 7 days to avoid autocorrelation issues.")
+  }
   ## OK, construct the concentration fit
   if(class(Y) == "lcens") {
     cfit <- censReg_AMLE.fit(Y, X, "lognormal")
@@ -211,7 +223,7 @@ loadReg <- function(formula, data, subset, na.action, flow, dates,
                  method=method, conc.units=conc.units, Time=Time,
                  Sum.flow=summary(Flow),
                  load.units=load.units, PoR=PoR, xvars=xvars,
-                 lfit=lfit, cfit=cfit)
+                 lfit=lfit, cfit=cfit, time.step=time.step)
   class(retval) <- "loadReg"
   return(retval)
 }

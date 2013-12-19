@@ -1,0 +1,35 @@
+\name{loadStats}
+\alias{loadStats}
+\title{Summary Statistics}
+\usage{
+  loadStats(fit, which = "load")
+}
+\arguments{
+  \item{fit}{an object of class "loadReg"---output from
+  \code{loadReg}.}
+
+  \item{which}{a character string indicating the "load" or
+  "concentration" model.}
+}
+\value{
+  A list containing \code{outSum}, selected summary
+  statistics; of the observed and estimated values and
+  \code{outBias}, the bias statistics.
+}
+\description{
+  Compute some summary statistics for a rating-curve
+  load-estimation model.
+}
+\examples{
+# From application 1 in the vignettes
+data(app1.calib)
+app1.lr <- loadReg(Phosphorus ~ model(1), data = app1.calib,
+ flow = "FLOW", dates = "DATES", conc.units="mg/L",
+ station="Illinois River at Marseilles, Ill.")
+loadStats(app1.lr)
+}
+\seealso{
+  \code{\link{loadReg}}
+}
+\keyword{utilities}
+

@@ -1,0 +1,26 @@
+\name{nashSutcliffe}
+\alias{nashSutcliffe}
+\title{Nash Sutcliffe}
+\usage{
+  nashSutcliffe(obs, est, na.rm = TRUE)
+}
+\arguments{
+  \item{obs}{a vector of the observed values.}
+
+  \item{est}{a vector of the model estiamted values. Each
+  value must pair with each value in \code{obs}.}
+
+  \item{na.rm}{remove missing values from \code{obs} and
+  \code{est} before computing the Nash-Sutcliffe efficiency
+  rating.}
+}
+\value{
+  A single numeric value representing the Nash-Sutcliffe
+  efficiency rating for the observed and estiamted data.
+}
+\description{
+  Compute the Nash-Sutcliffe efficiency rating for model
+  estiamtes.
+}
+\keyword{utilities}
+

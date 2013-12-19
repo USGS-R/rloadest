@@ -1,0 +1,201 @@
+\documentclass{article}
+\parskip 3pt
+%\VignetteIndexEntry{Example Application 1}
+%\VignetteDepends{rloadest}
+
+\begin{document}
+\SweaveOpts{concordance=TRUE}
+\raggedright
+\parindent 30 pt
+
+\title{Application 1: Analysis of an Uncensored Constituent using a Predefined Model}
+
+\author{Dave Lorenz}
+
+\maketitle
+
+This example illustrates the format of the input datasets and the format of the calls to build a predefined rating curve model and to make estimates in rloadest. A predefined model that describes the linear relation between the log of constituent load and log streamflow is built and used for load estimation.
+
+The data used in this application were collected from the Illinois River at Marseilles, Illinois (p. 257, Helsel and Hirsch, 2002). Ninety six water-quality samples for total phosphorus collected between November 1974 and April 1985 are used in conjunction with observed streamflow data to build the regression model and the calibration data are used to estimate loads as was dome in Helsel and Hirsch (2002) and Runkel and others (2004).
+
+Part 2 illustrates the diagnostic graphs that can be used to improve the model and offers a step-by-step approach to building a calibrated model.
+
+<<echo=TRUE>>=
+# Load the rloadest package and the data
+library(rloadest)
+data(app1.calib)
+head(app1.calib)
+@
+
+\eject
+\section{Build the Model}
+
+The \texttt{loadReg} function is used to build the rating-curve model for constituent load estimation. The basic form of the call to \texttt{loadReg} is similar to the call to \texttt{lm} in that it requires a formula and data source. The response variable in the formula is the constituent concentration, which is converted to load per day (flux) based on the units of concentration and the units of flow. The \texttt{conc.units}, \texttt{flow.units}, and \texttt{load.units} arguments to \texttt{loadReg} define the conversion. For these data, the concentration units (\texttt{conc.units}) are "mg/L", the flow units are "cfs" (the default), and the load units for the model are "kg" (also the default). If \texttt{conc.units} is not set, they are assumed to be "mg/L" and a warning is issued. Two additional pieces of information are required for \texttt{loadReg}---the names of the flow column and the dates column. A final option, the station identifier, can also be specified.
+
+Predefined models can easily be constructed using the \texttt{model} function as the response variable. For the call to \texttt{loadReg}, only the model number is needed---the \texttt{loadReg} automatically constructs the required input. This example uses model number 1. The model numbers match the terms in Runkel and others (2004), but the order is different---decimal time terms precede seasonal time terms.
+
+<<echo=TRUE>>=
+# Create the load model.
+app1.lr <- loadReg(Phosphorus ~ model(1), data = app1.calib, flow = "FLOW", 
+                   dates = "DATES", conc.units="mg/L",
+                   station="Illinois River at Marseilles, Ill.")
+@
+
+\eject
+\section{Print the Model Report}
+
+An abbreviated form of the model report can be printed simply by typing the name of the model object (\texttt{app1.lr} in this case) in the R Console window. A more complete form that closely matches the output from LOADEST can be obtained by using the \texttt{print} function as shown below.
+
+<<echo=TRUE>>=
+print(app1.lr, brief=FALSE, load.only=FALSE)
+@
+
+Aside, from the cosmetic differences, there will be some differences in the actual numeric output. Major differences are listed below.
+
+LOADEST prints a modified form of AIC and SPCC, whereas the AIC and SPCC computed by this version are consistent with AIC and BIC computed for the same model using different methods, like simple linear regression (using \texttt{lm}) in this case of no censoring.
+
+The format for the model output matches the general format for regression model output in \texttt{R} rather than the format in LOADEST. It is expected that users of rloadest will be familiar with the general format for regression model output in \texttt{R}.
+
+This version prints G-squared, which is the test statistic for the overall model fit, and it's attained p-value.
+
+Finally, the summary statistics of loads and concentrations are based on the units defined in the call to \texttt{loadReg} rather than the specified output in LOADEST.
+
+\eject
+\section{Estimate Loads}
+
+Unlike LOADEST, rloadest requires to the user to build the rating-curve model before estimating loads. For this application, we will follow the general layout of LOADEST and estimate loads directly from the model created earlier in this application.
+
+The \texttt{predLoad} function is used to estimate loads. It estimates loads in units per day, which is referred to as flux in rloadest. The arguments for \texttt{predLoad} are \texttt{fit}, the model output from \texttt{loadReg}; \texttt{newdata}, the estimation dataset; \texttt{load.units}, the load units for the estimates, which are taken from the model output if not specified; \texttt{by}, a character string indicating how to aggregate the load estimates; \texttt{seopt}, how to compute the standard error of the load; \texttt{allow.incomplete}, a logical value that indicates whether or not to allow incomplete periods to be estimated; and \texttt{print}, indicating whether to print a summary.
+
+Unlike the \texttt{predict} function in base \texttt{R}, \texttt{newdata} is required. The columns in \texttt{newdata} must match the column names in the calibration dataset. For predefined models, the column names for dates and flow must match.
+
+The \texttt{by} argument must be "unit," "day,", "month," "water year," "calendar year," "total," or the name of a grouping column in \texttt{newdata}. The "unit" option is not available in version 0.1.
+
+The argument \texttt{allow.incomplete} is not fully implemented in version 0.1.
+
+Application 1 in LOADEST uses the identical data for estimation as was used for calibration. This application will use the same dataset. The call in the \texttt{R} code below simply prints the results and discards the data frame that is calculated.
+
+<<echo=TRUE>>=
+predLoad(app1.lr, newdata = app1.calib, load.units="tons", by="total",
+         print=TRUE)
+@
+
+\eject
+\section{Part 2, Diagnostic Plots}
+
+The rloadest package contains a \texttt{plot} function that creates diagnostic plots of the load model. Most often the user will just enter \texttt{plot(app1.lr)} (for this example) in the R Console window to generate the full suite of plots, but this example application will generate each plot individually. And, in general, the user will not need to set up a graphics device. But for this vignette, the graphics device must be set up for each graph.
+
+Figure 1 is related to figure 7 in Runkel and others (2004) because there is only a single explanatory variable. Figure 1 shows the AMLE regression line as a dashed line and the solid line is a LOWESS smooth curve. The LOWESS curve agrees very well with the regression line.
+<<echo=TRUE>>=
+# setSweave is required for the vignette.
+setSweave("app1_01", 5, 5)
+plot(app1.lr, which=1, set.up=FALSE)
+graphics.off()
+@
+<<results=tex, echo=FALSE>>=
+cat("\\includegraphics{app1_01.pdf}\n")
+cat("\\paragraph{}\n")
+@
+
+\textbf{Figure 1.} The rating-curve regression model.
+
+\eject
+Figure 2 is the same as figure 8 in Runkel and others (2004).The horizontal dashed line is at zero and the solid line is the LOWESS smooth. The LOWESS smooth is very close to the zero line and indicates no lack of fit.
+<<echo=TRUE>>=
+# setSweave is required for the vignette.
+setSweave("app1_02", 5, 5)
+plot(app1.lr, which=2, set.up=FALSE)
+graphics.off()
+@
+<<results=tex, echo=FALSE>>=
+cat("\\includegraphics{app1_02.pdf}\n")
+cat("\\paragraph{}\n")
+@
+
+\textbf{Figure 2.} The residuals versus fit for the regression model.
+
+\eject
+Figure 3 is a scale-location (S-L) graph that is a useful graph for assessing heteroscedasticity of the residuals. The horizontal dashed line is the expected value of the square root of the absolute value of the residuals and the solid line is the LOWESS smooth. Even though there is a small slope in the LOWESS line, it is not enough to cause concern for unequal variance in the estimates.
+<<echo=TRUE>>=
+# setSweave is required for the vignette.
+setSweave("app1_03", 5, 5)
+plot(app1.lr, which=3, set.up=FALSE)
+graphics.off()
+@
+<<results=tex, echo=FALSE>>=
+cat("\\includegraphics{app1_03.pdf}\n")
+cat("\\paragraph{}\n")
+@
+
+\textbf{Figure 3.} The scale-location graph for the regression model.
+
+\eject
+The correlogram in figure 4 is a adaptation of the correlogram from time-series analysis, which deals with regular samples. The horizontal dashed line is the zero value and the solid line is a kernel smooth rather than a LOWESS line. The kernel smooth gives a better fit in this case. The solid line should be very close to the horizontal line. In this case, because the solid line is consistently above the horizontal line for more than 1 year, we have concern for a lack of fit over time---a linear time term should be added to the model. There is also a slight regular pattern with a higher line at 0 and 1 and a low line at about 0.5. This might suggest a seasonal lack of fit.
+<<echo=TRUE>>=
+# setSweave is required for the vignette.
+setSweave("app1_04", 5, 5)
+plot(app1.lr, which=4, set.up=FALSE)
+graphics.off()
+@
+<<results=tex, echo=FALSE>>=
+cat("\\includegraphics{app1_04.pdf}\n")
+cat("\\paragraph{}\n")
+@
+
+\textbf{Figure 4.} The correlogram from the regression model.
+
+\eject
+Figure 5 is the same as figure 9 in Runkel and others (2004), except that figure 5 shows the standardized residuals, which are assumed to have a standard deviation of 1. The solid line is the theoretical fit of mean of 0 and standard deviation of 1. The visual appearance of figure 5 confirms the results of the PPCC test in the printed output---the residuals are reasonably normal in distribution.
+<<echo=TRUE>>=
+# setSweave is required for the vignette.
+setSweave("app1_05", 5, 5)
+plot(app1.lr, which=5, set.up=FALSE)
+graphics.off()
+@
+<<results=tex, echo=FALSE>>=
+cat("\\includegraphics{app1_05.pdf}\n")
+cat("\\paragraph{}\n")
+@
+
+\textbf{Figure 5.} The Q-normal plot of the residuals.
+
+\eject
+Figure 6 is an extended box plot---a truncated box plot, at the 5 and 95 percentiles that shows the individual values larger than the 95th percentile and smaller than the 5th percentile. The box plots in figure 6 show the distributions of the actual and estimated loads. The appearance of these box plots agrees with what is expected---the range of the estimated values is a little smaller than the range of the actual,because of "regression to the mean," and the location is similar, the median and quartiles match reasonably well. This figure confirms the bias diagnostics section of the printed report.
+<<echo=TRUE>>=
+# setSweave is required for the vignette.
+setSweave("app1_06", 5, 5)
+plot(app1.lr, which=6, set.up=FALSE)
+graphics.off()
+@
+<<results=tex, echo=FALSE>>=
+cat("\\includegraphics{app1_06.pdf}\n")
+cat("\\paragraph{}\n")
+@
+
+\textbf{Figure 6.} Box plot comparing estimated and observed values.
+
+\eject
+\section{Add Linear and Seasonal Time to the Model}
+
+The correlogram (fig. 4) suggested that at least one reason for the relatively large value for the serial correlation (0.2303) being relatively large is a lack of fit over time and possibly a seasonal component. Model number 7 includes linear flow, linear time and seasonal time. Note the brevity of the brief version (default) of the report. The correlogram, fig. 7, does not show a regular pattern that might indicate any lack of fit over time. The remaining diagnostic plots are not displayed in this vignette.
+<<echo=TRUE>>=
+# Create and print the revised load model.
+app1.lr7 <- loadReg(Phosphorus ~ model(7), data = app1.calib, flow = "FLOW", 
+                   dates = "DATES", conc.units="mg/L",
+                   station="Illinois River at Marseilles, Ill.")
+print(app1.lr7)
+# setSweave is required for the vignette.
+setSweave("app1_07", 5, 5)
+plot(app1.lr7, which=4, set.up=FALSE)
+graphics.off()
+@
+<<results=tex, echo=FALSE>>=
+cat("\\includegraphics{app1_07.pdf}\n")
+cat("\\paragraph{}\n")
+@
+
+\textbf{Figure 7.} The correlogram from the revised regression model.
+
+
+
+\end{document}

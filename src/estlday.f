@@ -75,7 +75,7 @@
 *     uncorrelated lag 1 (approx correct for mid-size rivers -- see
 *     Tim Cohn 1989 notes)
 *     
-         CALL LOADSEP(NUM,MVUE,S2,LOADVAR(I),LOADSP(I))
+         CALL LOADSEP(NUM,NUM,MVUE,S2,LOADVAR(I),LOADSP(I))
          LOADVAR(I) = LOADVAR(I)/(NUM*NUM)
 *
 *     Compute approx 95% confidence interval around true load

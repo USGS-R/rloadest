@@ -38,9 +38,9 @@ print.loadReg <- function(x, digits=4, brief=TRUE, load.only=brief, ...) {
         "U.S. Geological Survey, Version for R 0.1 (June, 2013)\n",
         "------------------------------------------------------\n\n",
         sep="")
-    cat(x$station, "\n\n", sep="")
   }
-  cat("Constituent:", x$constituent, "\n\n", sep="")
+  cat("Station: ", x$station, "\n", sep="")
+  cat("Constituent: ", x$constituent, "\n\n", sep="")
   ## Load output
   if(!brief)
     cat("----------------------------------------------------------------------\n",
@@ -131,7 +131,9 @@ print.loadReg <- function(x, digits=4, brief=TRUE, load.only=brief, ...) {
   }
   if(x$lfit$NPAR > 2L) { # Print the VIFs
     cat("Variance Inflation Factors:\n")
-    print(vif(x$lfit), digtis=digits)
+    vifs <- as.matrix(vif(x$lfit))
+    colnames(vifs) <- "VIF"
+    print(vifs, digits=digits)
   }
   cat("\nComparison of Observed and Estimated Loads\n",
       "------------------------------------------\n", sep="")
