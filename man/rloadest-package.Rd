@@ -4,8 +4,8 @@
 \title{Load Estimation Functions}
 \description{
   \tabular{ll}{ Package: \tab rloadest\cr Type: \tab
-  Package\cr Version: \tab 0.2\cr Date: \tab 2013-07-16\cr
-  License: \tab GPL 2\cr LazyLoad: \tab yes\cr }
+  Package\cr Version: \tab 0.2\cr Date: \tab 2013-12-19\cr
+  License: \tab File LICENSE\cr LazyLoad: \tab yes\cr }
 }
 \details{
   This package is intended to replicate and extend the
@@ -31,7 +31,8 @@
   rating-curve models than LOADEST.
 }
 \author{
-  Dave Lorenz \email{lorenz@usgs.gov}
+  Dave Lorenz \email{lorenz@usgs.gov}, Laura De Cicco \email{ldecicco@usgs.gov},
+  Rob Runkel \email{runkel@usgs.gov}
 }
 \keyword{estimation}
 \keyword{load}

@@ -1,8 +1,8 @@
 Package: rloadest
 Type: Package
 Title: River Load Estimation
-Version: 0.1.0
-Date: 2013-05-31
+Version: 0.2
+Date: 2013-12-19
 Author: Dave Lorenz, Rob Runkel, Laura De Cicco
 Maintainer: Dave Lorenz <lorenz@usgs.gov>
 Description: Collection of functions to make constituent load estimations
