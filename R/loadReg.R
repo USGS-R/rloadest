@@ -221,7 +221,7 @@ loadReg <- function(formula, data, subset, na.action, flow, dates,
                  flow=flow, dates=dates, Qadj=Qadj,
                  Tadj=Tadj, model.no=model.no, model.eval=MEC,
                  method=method, conc.units=conc.units, Time=Time,
-                 Sum.flow=summary(Flow),
+                 Sum.flow=summary(Flow), flow.units=flow.units,
                  load.units=load.units, PoR=PoR, xvars=xvars,
                  lfit=lfit, cfit=cfit, time.step=time.step)
   class(retval) <- "loadReg"
