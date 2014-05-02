@@ -44,3 +44,4 @@ Collate:
     'loadReport.R'
     'dailyAg.R'
     'nashSutcliffe.R'
+    'AICc.R'

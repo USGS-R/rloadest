@@ -1,0 +1,42 @@
+\name{AICc}
+\alias{AICc}
+\title{Akaike's An Information Criterion with Correction}
+\usage{
+  AICc(object)
+}
+\arguments{
+  \item{object}{the output from \code{loadReg}, or any
+  object that has a \code{logLik} method.}
+}
+\value{
+  A numeric value corresponding to the AICc of
+  \code{object}.
+}
+\description{
+  Compute Akaike's An Information Criterion with Correction
+  (AICc) for for finite sample sizes.
+}
+\note{
+  The penalty that \code{AIC} applies for adding
+  explanatory variables is biased low when the number of
+  samples is small. As a result, models with small smaple
+  sizes can be overfitted. \code{AICc} can be used to
+  identify more parsimonious models.
+}
+\examples{
+# From application 1 in the vignettes
+data(app1.calib)
+app1.lr <- loadReg(Phosphorus ~ model(1), data = app1.calib,
+ flow = "FLOW", dates = "DATES", conc.units="mg/L",
+ station="Illinois River at Marseilles, Ill.")
+AICc(app1.lr)
+}
+\references{
+  Hurvitch, C.M. and Tsai, C.L., 1989, Regression and time
+  series model selection in small samples: Biometrika, v.
+  76, no. 2, p. 297--307.
+}
+\seealso{
+  \code{\link{loadReg}},
+}
+

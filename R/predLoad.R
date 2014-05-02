@@ -174,7 +174,7 @@ predLoad <- function(fit, newdata, load.units=fit$load.units, by="total",
       Names <- paste(c("L", "U"), round(conf.int*100, 0), sep="")
       DF <- fit$lfit$NOBSC - fit$lfit$NPAR
       B <- sqrt(log(1 + (SEP[KDays]/Flux[KDays])^2))
-      A <- log(Flux[KDays] - 0.5*B^2)
+      A <- log(Flux[KDays]) - 0.5*B^2
       qci <- qt(1 - (1 - conf.int)/2, DF)
       L95[KDays] <- exp(A - qci*B)
       U95[KDays] <- exp(A + qci*B)
@@ -263,7 +263,7 @@ predLoad <- function(fit, newdata, load.units=fit$load.units, by="total",
       Names <- paste(c("L", "U"), round(conf.int*100, 0), sep="")
       DF <- fit$lfit$NOBSC - fit$lfit$NPAR
       B <- sqrt(log(1 + (SEP[KDays]/Flux[KDays])^2))
-      A <- log(Flux[KDays] - 0.5*B^2)
+      A <- log(Flux[KDays]) - 0.5*B^2
       qci <- qt(1 - (1 - conf.int)/2, DF)
       L95[KDays] <- exp(A - qci*B)
       U95[KDays] <- exp(A + qci*B)
@@ -306,7 +306,7 @@ predLoad <- function(fit, newdata, load.units=fit$load.units, by="total",
     Flow <- newdata[[flow]]
     Sum <- rowSums(model.inp) # Use to detect any missing values
     ## No reason to checkDays because total is total
-    if(any(drop <- is.na(Sum)) && !allow.incomplete) {
+    if(any(drop <- is.na(Sum) & Flow > 0) && !allow.incomplete) {
       warning("Missing values in newdata")
       ## Return all NAs
       retval <- data.frame(Period="total", Ndays=NA_integer_,
@@ -362,7 +362,7 @@ predLoad <- function(fit, newdata, load.units=fit$load.units, by="total",
       KDays <- period
       Flow <- newdata[period, flow]
       Sum <- rowSums(model.inp[period,]) # Use to detect any missing values
-      drop <- is.na(Sum)
+      drop <- is.na(Sum) & Flow > 0
       ## Check for incomplete data
       OK <- TRUE
       if(!allow.incomplete) {

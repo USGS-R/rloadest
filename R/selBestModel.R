@@ -46,6 +46,8 @@ selBestModel <- function(constituent, data, subset, na.action, flow, dates,
   cl[[2L]] <- as.formula(paste(constituent, " ~ model(1)", sep=""))
   retval <- model <- eval(cl)
   model.eval <- model$model.eval
+  # Append AICc
+  model.eval$AICc <- AICc(model)
   AICbest <- model.eval$AIC
   ## Supress multiple warnings
   warn <- options("warn")
@@ -53,7 +55,9 @@ selBestModel <- function(constituent, data, subset, na.action, flow, dates,
   for(model.no in seq(2L, 9L)) {
     cl[[2L]] <- as.formula(paste(constituent, " ~ model(", model.no, ")", sep=""))
     model <- eval(cl)
-    model.eval <- rbind(model.eval, model$model.eval)
+    model.tmp <- model$model.eval
+    model.tmp$AICc <- AICc(model)
+    model.eval <- rbind(model.eval, model.tmp)
     if(model$model.eval$AIC < AICbest) {
       AICbest <- model$model.eval$AIC
       retval <- model

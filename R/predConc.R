@@ -158,7 +158,7 @@ predConc <- function(fit, newdata, by="day",
       Names <- paste(c("L", "U"), round(conf.int*100, 0), sep="")
       DF <- fit$cfit$NOBSC - fit$cfit$NPAR
       B <- sqrt(log(1 + (SEP[KDays]/Conc[KDays])^2))
-      A <- log(Conc[KDays] - 0.5*B^2)
+      A <- log(Conc[KDays]) - 0.5*B^2
       qci <- qt(1 - (1 - conf.int)/2, DF)
       L95[KDays] <- exp(A - qci*B)
       U95[KDays] <- exp(A + qci*B)
@@ -247,7 +247,7 @@ predConc <- function(fit, newdata, by="day",
       Names <- paste(c("L", "U"), round(conf.int*100, 0), sep="")
       DF <- fit$cfit$NOBSC - fit$cfit$NPAR
       B <- sqrt(log(1 + (SEP[KDays]/Conc[KDays])^2))
-      A <- log(Conc[KDays] - 0.5*B^2)
+      A <- log(Conc[KDays]) - 0.5*B^2
       qci <- qt(1 - (1 - conf.int)/2, DF)
       L95[KDays] <- exp(A - qci*B)
       U95[KDays] <- exp(A + qci*B)

@@ -1,3 +1,4 @@
+export(AICc)
 export(c2load)
 export(center)
 export(dailyAg)
