@@ -2,8 +2,8 @@
 \alias{residuals.loadReg}
 \title{Extract Model Residuals}
 \usage{
-  \method{residuals}{loadReg} (object, type = "working",
-    suppress.na.action = FALSE, ...)
+\method{residuals}{loadReg}(object, type = "working",
+  suppress.na.action = FALSE, ...)
 }
 \arguments{
   \item{object}{an object of class "loadReg"---output from
@@ -20,35 +20,34 @@
   methods.}
 }
 \value{
-  The residuals from the regression as specified by
-  \code{type}.
+The residuals from the regression as specified by
+\code{type}.
 }
 \description{
-  Extract the residuals of a load regression.
+Extract the residuals of a load regression.
 }
 \details{
-  The value for \code{type} can be any one of the
-  following: \tabular{ll}{ Value \tab Description\cr
-  "working" \tab Residuals with censored residuals replaced
-  by their expected values\cr "response" \tab Residuals
-  from the linear predictor\cr "influence" \tab An estimate
-  of Cook's D values based on "working" residuals\cr
-  "leverage" \tab The hat diagonals\cr "S-L" \tab The
-  square-root of the absolute value of the residuals with
-  censored residuals replaced by their expected value\cr }
-  Also, any other value of \code{type} for
-  \code{\link{residuals.survreg}} can be used to obtain
-  those residuals. Note that "working" and "response" are
-  defined in the table above, in keeping with older
-  versions of \code{loadReg}.
+The value for \code{type} can be any one of the following:
+\tabular{ll}{ Value \tab Description\cr "working" \tab
+Residuals with censored residuals replaced by their
+expected values\cr "response" \tab Residuals from the
+linear predictor\cr "influence" \tab An estimate of Cook's
+D values based on "working" residuals\cr "leverage" \tab
+The hat diagonals\cr "S-L" \tab The square-root of the
+absolute value of the residuals with censored residuals
+replaced by their expected value\cr } Also, any other value
+of \code{type} for \code{\link{residuals.survreg}} can be
+used to obtain those residuals. Note that "working" and
+"response" are defined in the table above, in keeping with
+older versions of \code{loadReg}.
 }
 \note{
-  The residuals from the load regression are the same as
-  those from the concentration regression, so there is no
-  option to distinguish among those models.
+The residuals from the load regression are the same as
+those from the concentration regression, so there is no
+option to distinguish among those models.
 }
 \seealso{
-  \code{\link{loadReg}}
+\code{\link{loadReg}}
 }
 \keyword{regression}
 

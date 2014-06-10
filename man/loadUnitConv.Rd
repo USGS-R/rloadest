@@ -2,7 +2,7 @@
 \alias{loadUnitConv}
 \title{Unit Conversion}
 \usage{
-  loadUnitConv(from, to)
+loadUnitConv(from, to)
 }
 \arguments{
   \item{from}{character string describing the load units to
@@ -12,10 +12,10 @@
   convert to.}
 }
 \value{
-  The conversion factor.
+The conversion factor.
 }
 \description{
-  Computes the factor to convert from between load units.
+Computes the factor to convert from between load units.
 }
 \examples{
 loadUnitConv("kilograms", "tons")

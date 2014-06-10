@@ -2,7 +2,7 @@
 \alias{center}
 \title{Centered Linear Terms}
 \usage{
-  center(x, center = NULL)
+center(x, center = NULL)
 }
 \arguments{
   \item{x}{a numeric vector for which to compute the
@@ -13,30 +13,30 @@
   \code{x}.}
 }
 \value{
-  The centered value of \code{x}.
+The centered value of \code{x}.
 }
 \description{
-  Computes centered values. Used primarily in a linear
-  regression formula.
+Computes centered values. Used primarily in a linear
+regression formula.
 }
 \note{
-  The centering value by default is computed by the method
-  described in Cohn and others (1992).
+The centering value by default is computed by the method
+described in Cohn and others (1992).
 }
 \examples{
 # trivial ceneterd values from 1 to 10
 center(seq(10))
 }
 \references{
-  Cohn, T.A., Caulder, D.L., Gilroy, E.J., Zynjuk, L.D.,
-  and Summers, R.M., 1992, The validity of a simple
-  statistical model for estimating fluvial constituent
-  loads---An empirical study involving nutrient loads
-  entering Chesapeake Bay: Water Resources research, v. 28,
-  no. 5, p. 937--942.
+Cohn, T.A., Caulder, D.L., Gilroy, E.J., Zynjuk, L.D., and
+Summers, R.M., 1992, The validity of a simple statistical
+model for estimating fluvial constituent loads---An
+empirical study involving nutrient loads entering
+Chesapeake Bay: Water Resources research, v. 28, no. 5, p.
+937--942.
 }
 \seealso{
-  \code{\link{quadratic}}, \code{\link{scale}}
+\code{\link{quadratic}}, \code{\link{scale}}
 }
 \keyword{manip}
 

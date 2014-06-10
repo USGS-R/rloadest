@@ -2,7 +2,7 @@
 \alias{loadReport}
 \title{Create Load Report}
 \usage{
-  loadReport(x, file)
+loadReport(x, file)
 }
 \arguments{
   \item{x}{the load model.}
@@ -12,11 +12,11 @@
   the name of \code{x} is used as the base name.}
 }
 \value{
-  The actual file name is returned invisibly.
+The actual file name is returned invisibly.
 }
 \description{
-  Create a 2-page pdf file report of a rating-curve load
-  model. The report contains the text output and 6
-  diagnostic plots.
+Create a 2-page pdf file report of a rating-curve load
+model. The report contains the text output and 6 diagnostic
+plots.
 }
 

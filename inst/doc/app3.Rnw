@@ -1,5 +1,9 @@
 \documentclass{article}
 \parskip 3pt
+\parindent 30pt
+\usepackage[margin=1.25in]{geometry}
+\usepackage{amsmath}
+
 %\VignetteIndexEntry{Example Application 3}
 %\VignetteDepends{rloadest}
 
@@ -18,7 +22,7 @@ This application illustrates the "7-parameter model," a predefined model that ha
 
 As in the previous example, a constituent with a seasonal loading pattern is considered here. In this case, constituent concentrations are assumed to vary in a continuous manner, as opposed to the abrupt changes considered in Application 2.  Several of the predefined models (models 4 and 6--9; Section 3.2.2, table 7) use a first-order Fourier series (sine and cosine terms) to consider seasonality. In this application, the 7-parameter model (model 9) is developed for nutrient loading on the Potomac River. The 7-parameter model is given by:
 \begin{equation}
-\log(Load_i)=\alpha_0+\alpha_1{lnQ_i}+\alpha_2{lnQ_i^2}+\alpha_3{cT_i}+\alpha_4{cT_i^2}+\alpha_5 sin(2\pi{dT_i})+\alpha_5 cos(2\pi{dT_i})+\epsilon_i,
+\log(Load_i)=\alpha_0+\alpha_1{lnQ_i}+\alpha_2{lnQ_i^2}+\alpha_3{cT_i}+\alpha_4{cT_i^2}+\alpha_5 \sin(2\pi{dT_i})+\alpha_6 \cos(2\pi{dT_i})+\epsilon_i,
 \end{equation}
 where $lnQ_i$ is the centered log of flow, $cT_i$ is centered decimal time, and $dT_i$ is the decimal time for observation $i$. Within the model, explanatory variables one and two account for the dependence on flow, explanatory variables three and four account for the time trend, and explanatory variables five and six are a first-order Fourier series to account for seasonal variability.
 
@@ -180,7 +184,11 @@ with(app3.flow, tapply(Flow, waterYear(datetime), mean))
 
 Vecchia and others (2008) describe an approach for breaking down stream flow into what they call anomalies--long- to intermediate-term deviations from average flow and the residual high-frequency variation or daily residuals. That approach can be very useful in cases such as this where there is a strong relation between flow and concentration, but relatively persistent patterns of flow are not captured.
 
-The first step in modeling flow anomalies required retrieving data for a longer period of time. We'll retrieve data from two years prior to the start of the sampling record that we are working with. The additional two years of record were selected because the first one year would be all missing values and one additional year to establish a pattern going into 2001.  Then we'll construct a single 1-year anomaly, which seems to make sense from figure 6. 
+The first step in modeling flow anomalies required retrieving data for a longer period of time. We'll retrieve data from two years prior to the start of the sampling record that we are working with. The additional two years of record were selected because the first one year would be all missing values and one additional year to establish a pattern going into 2001.  Then we'll construct a single 1-year anomaly, which seems to make sense from figure 6. This 6-parameter anomaly model is given by:
+\begin{equation}
+\log(Load_i)=\alpha_0+\alpha_1{A1yr_i}+\alpha_2{HFV_i}+\alpha_3{dT_i}+\alpha_4 \sin(2\pi{dT_i})+\alpha_5 \cos(2\pi{dT_i})+\epsilon_i,
+\end{equation}
+where $A1yr_i$ is the 1-year anomaly of the log of flow, $HFV_i$ is remaining high-frequency variation in the log of flow, and $dT_i$ is the decimal time for observation $i$.
 
 <<echo=TRUE>>=
 app3.anom <- renCol(readNWIS("01646502",
@@ -201,7 +209,7 @@ app3.calib <- mergeQ(app3.qw, FLOW=c("Flow", "a1yr", "HFV"),
                      Qdata=app3.anom, Plot=FALSE)
 @
 
-The final step is to construct the model. Note that flow is not a necessary part of the model because it is represented by the anomalies, linear time is represented by \texttt{dectime(datetime)}, and the seasonal components by \textt{fourier(datetime)}. Note also that decimal time is not centered, but could be by using the \texttt{center} function.
+The final step is to construct the model. Note that flow is not a necessary part of the model because it is represented by the anomalies, linear time is represented by \texttt{dectime(datetime)}, and the seasonal components by \texttt{fourier(datetime)}. Note also that decimal time is not centered, but could be by using the \texttt{center} function.
 
 <<echo=TRUE>>=
 app3.lra <- loadReg(OrthoPhosphate.PO4 ~ a1yr + HFV + dectime(datetime)

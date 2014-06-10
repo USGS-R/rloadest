@@ -2,8 +2,8 @@
 \alias{fitted.loadReg}
 \title{Extract Model Fitted Values}
 \usage{
-  \method{fitted}{loadReg} (object,
-    suppress.na.action = FALSE, which = "load", ...)
+\method{fitted}{loadReg}(object, suppress.na.action = FALSE, which = "load",
+  ...)
 }
 \arguments{
   \item{object}{an object of class "loadReg"---output from
@@ -18,11 +18,11 @@
   methods.}
 }
 \value{
-  The fitted values from the regression. Note that these
-  are not back- transformed but are in natrual log units.
+The fitted values from the regression. Note that these are
+not back- transformed but are in natrual log units.
 }
 \description{
-  Extract the fitted values of a load regression.
+Extract the fitted values of a load regression.
 }
 \examples{
 # From application 1 in the vignettes
@@ -34,7 +34,7 @@ app1.lr <- loadReg(Phosphorus ~ model(1), data = app1.calib,
 fitted(app1.lr)
 }
 \seealso{
-  \code{\link{loadReg}}
+\code{\link{loadReg}}
 }
 \keyword{regression}
 

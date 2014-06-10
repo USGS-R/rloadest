@@ -2,7 +2,7 @@
 \alias{loadestTadj}
 \title{Center Time}
 \usage{
-  loadestTadj(x, round = options("round.time"))
+loadestTadj(x, round = options("round.time"))
 }
 \arguments{
   \item{x}{the calibration date data.}
@@ -13,12 +13,12 @@
   then do no round.}
 }
 \value{
-  A vector of length 2 containing the base (reference) year
-  and the centering time correction value. The user value
-  for centered time would be sum.
+A vector of length 2 containing the base (reference) year
+and the centering time correction value. The user value for
+centered time would be sum.
 }
 \description{
-  Internal support function for rloadest that computes the
-  adjustment to time.
+Internal support function for rloadest that computes the
+adjustment to time.
 }
 

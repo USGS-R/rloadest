@@ -2,7 +2,7 @@
 \alias{loadestQadj}
 \title{Center Flow}
 \usage{
-  loadestQadj(x, round = options("round.flow"))
+loadestQadj(x, round = options("round.flow"))
 }
 \arguments{
   \item{x}{the calibration flow data.}
@@ -13,10 +13,10 @@
   then do no round.}
 }
 \value{
-  The centering value for flow.
+The centering value for flow.
 }
 \description{
-  Internal support function for rloadest that computes the
-  adjustment to flow.
+Internal support function for rloadest that computes the
+adjustment to flow.
 }
 

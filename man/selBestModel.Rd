@@ -2,9 +2,9 @@
 \alias{selBestModel}
 \title{Load Estimation}
 \usage{
-  selBestModel(constituent, data, subset, na.action, flow,
-    dates, flow.units = "cfs", conc.units = "",
-    load.units = "kg", time.step = "day", station = "")
+selBestModel(constituent, data, subset, na.action, flow, dates,
+  flow.units = "cfs", conc.units = "", load.units = "kg",
+  time.step = "day", station = "")
 }
 \arguments{
   \item{constituent}{a character string giving the name of
@@ -41,11 +41,11 @@
   station.}
 }
 \value{
-  An object of class "loadReg."
+An object of class "loadReg."
 }
 \description{
-  Select the "best" predefined rating-curve (regression)
-  model for river load estimation.
+Select the "best" predefined rating-curve (regression)
+model for river load estimation.
 }
 \examples{
 # Use the data from application 1 in the vignettes
@@ -57,10 +57,10 @@ app1.lr <- selBestModel("Phosphorus", data = app1.calib,
 print(app1.lr)
 }
 \references{
-  will need some.
+will need some.
 }
 \seealso{
-  \code{\link{censReg}}
+\code{\link{censReg}}
 }
 \keyword{censored}
 \keyword{loads}

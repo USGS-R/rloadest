@@ -2,10 +2,9 @@
 \alias{predLoad}
 \title{Predict Loads}
 \usage{
-  predLoad(fit, newdata, load.units = fit$load.units,
-    by = "total", seopt = "exact",
-    allow.incomplete = FALSE, conf.int = 0.95,
-    print = FALSE)
+predLoad(fit, newdata, load.units = fit$load.units, by = "total",
+  seopt = "exact", allow.incomplete = FALSE, conf.int = 0.95,
+  print = FALSE)
 }
 \arguments{
   \item{fit}{the output from \code{loadReg}.}
@@ -32,31 +31,31 @@
   estimate?}
 }
 \value{
-  A data frame containing the load estimates.
+A data frame containing the load estimates.
 }
 \description{
-  Estimate loads from a rating-curve model from
-  \code{loadReg} for a new data frame, aggregating the
-  loads by specified time periods.
+Estimate loads from a rating-curve model from
+\code{loadReg} for a new data frame, aggregating the loads
+by specified time periods.
 }
 \details{
-  The time frame specified by \code{by} can be "unit,"
-  "day," "month," "water year," "calendar year," "total,"
-  or the name of a column in \code{newdata} that can be
-  used to group the data.
+The time frame specified by \code{by} can be "unit," "day,"
+"month," "water year," "calendar year," "total," or the
+name of a column in \code{newdata} that can be used to
+group the data.
 
-  If \code{allow.incomplete} is \code{TRUE}, then loads
-  will be computed based on all nonmissing values,
-  otherwise missing values \code{NAs} will be returned. For
-  this application, missing values includes \code{NAs} and
-  gaps in the record, except for \code{by} set to "total"
-  or user defined groups where missing values only includes
-  \code{NAs}.
+If \code{allow.incomplete} is \code{TRUE}, then loads will
+be computed based on all nonmissing values, otherwise
+missing values \code{NAs} will be returned. For this
+application, missing values includes \code{NAs} and gaps in
+the record, except for \code{by} set to "total" or user
+defined groups where missing values only includes
+\code{NAs}.
 
-  The term confidence interval is used here as in the
-  original documentation for LOADEST, but the values that
-  are reported are the prediction intervals, computed from
-  the SEP.
+The term confidence interval is used here as in the
+original documentation for LOADEST, but the values that are
+reported are the prediction intervals, computed from the
+SEP.
 }
 \examples{
 # From application 1 in the vignettes
@@ -67,6 +66,6 @@ app1.lr <- loadReg(Phosphorus ~ model(1), data = app1.calib,
 predLoad(app1.lr, app1.calib)
 }
 \seealso{
-  \code{\link{loadReg}},
+\code{\link{loadReg}},
 }
 

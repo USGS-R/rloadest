@@ -2,8 +2,7 @@
 \alias{plot.loadReg}
 \title{Diagnostic Plot}
 \usage{
-  \method{plot}{loadReg} (x, which = "All", set.up = TRUE,
-    span = 1, ...)
+\method{plot}{loadReg}(x, which = "All", set.up = TRUE, span = 1, ...)
 }
 \arguments{
   \item{x}{an object of class "loadReg"---output from
@@ -21,33 +20,32 @@
   methods.}
 }
 \value{
-  The object \code{x} is returned invisibly.
+The object \code{x} is returned invisibly.
 }
 \description{
-  Plot rating-curve load model diagnostics.
+Plot rating-curve load model diagnostics.
 }
 \details{
-  Seven graphs can be produced by this function. If
-  \code{which} is "All," then all plots are produced. The
-  argument \code{which} can also be the name of an
-  explanatory variable so that a partial residual plot is
-  created for a single variable. Or \code{which} can be any
-  of a sequence of numbers from 1 thorugh 7. Numeric values
-  for \code{which}: \enumerate{ \item Observed vs. fitted.
-  \item Fitted vs. Residual \item S-L plot \item A
-  correlogram if dates are available in the model or in the
-  data set \item Q-normal \item Tukey boxplots for oberved
-  and estimated \item Partial residual plots for each
-  explanatory variable }
+Seven graphs can be produced by this function. If
+\code{which} is "All," then all plots are produced. The
+argument \code{which} can also be the name of an
+explanatory variable so that a partial residual plot is
+created for a single variable. Or \code{which} can be any
+of a sequence of numbers from 1 thorugh 7. Numeric values
+for \code{which}: \enumerate{ \item Observed vs. fitted.
+\item Fitted vs. Residual \item S-L plot \item A
+correlogram if dates are available in the model or in the
+data set \item Q-normal \item Tukey boxplots for oberved
+and estimated \item Partial residual plots for each
+explanatory variable }
 }
 \note{
-  This plotting function uses the core routines in the
-  \code{USGSwsGraphs} package. It requires a graphics page
-  that is set up from the functions in that package
-  (\code{setpage} or \code{setPDF}) if \code{set.up} is
-  \code{FALSE}. The graphs that are produced by this
-  function are based on the publication guidelines of the
-  USGS.
+This plotting function uses the core routines in the
+\code{USGSwsGraphs} package. It requires a graphics page
+that is set up from the functions in that package
+(\code{setpage} or \code{setPDF}) if \code{set.up} is
+\code{FALSE}. The graphs that are produced by this function
+are based on the publication guidelines of the USGS.
 }
 \examples{
 # From application 1 in the vignettes
@@ -61,8 +59,8 @@ plot(app1.lr)
 }
 }
 \seealso{
-  \code{\link{censReg}}, \code{\link{setPage}},
-  \code{\link{setPDF}}
+\code{\link{censReg}}, \code{\link{setPage}},
+\code{\link{setPDF}}
 }
 \keyword{hplot}
 \keyword{regression}

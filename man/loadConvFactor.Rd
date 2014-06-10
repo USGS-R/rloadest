@@ -2,7 +2,7 @@
 \alias{loadConvFactor}
 \title{Unit Conversion}
 \usage{
-  loadConvFactor(flow.units, conc.units, load.units)
+loadConvFactor(flow.units, conc.units, load.units)
 }
 \arguments{
   \item{flow.units}{character string describing the flow
@@ -15,11 +15,11 @@
   unit}
 }
 \value{
-  The conversion factor.
+The conversion factor.
 }
 \description{
-  Computes the conversion factor to compute the flux units
-  (load units) from the concentration and flow units
+Computes the conversion factor to compute the flux units
+(load units) from the concentration and flow units
 }
 \examples{
 loadConvFactor("cubic meter per second","milligrams per liter","pounds")

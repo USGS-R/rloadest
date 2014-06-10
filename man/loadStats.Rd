@@ -2,7 +2,7 @@
 \alias{loadStats}
 \title{Summary Statistics}
 \usage{
-  loadStats(fit, which = "load")
+loadStats(fit, which = "load")
 }
 \arguments{
   \item{fit}{an object of class "loadReg"---output from
@@ -12,13 +12,13 @@
   "concentration" model.}
 }
 \value{
-  A list containing \code{outSum}, selected summary
-  statistics; of the observed and estimated values and
-  \code{outBias}, the bias statistics.
+A list containing \code{outSum}, selected summary
+statistics; of the observed and estimated values and
+\code{outBias}, the bias statistics.
 }
 \description{
-  Compute some summary statistics for a rating-curve
-  load-estimation model.
+Compute some summary statistics for a rating-curve
+load-estimation model.
 }
 \examples{
 # From application 1 in the vignettes
@@ -29,7 +29,7 @@ app1.lr <- loadReg(Phosphorus ~ model(1), data = app1.calib,
 loadStats(app1.lr)
 }
 \seealso{
-  \code{\link{loadReg}}
+\code{\link{loadReg}}
 }
 \keyword{utilities}
 

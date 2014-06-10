@@ -2,9 +2,8 @@
 \alias{loadReg}
 \title{Load Estimation}
 \usage{
-  loadReg(formula, data, subset, na.action, flow, dates,
-    flow.units = "cfs", conc.units = "", load.units = "kg",
-    time.step = "day", station = "")
+loadReg(formula, data, subset, na.action, flow, dates, flow.units = "cfs",
+  conc.units = "", load.units = "kg", time.step = "day", station = "")
 }
 \arguments{
   \item{formula}{a formula describing the regression model.
@@ -40,19 +39,19 @@
   station.}
 }
 \value{
-  An object of class "loadReg."
+An object of class "loadReg."
 }
 \description{
-  Build a rating-curve (regression) model for river load
-  estimation.
+Build a rating-curve (regression) model for river load
+estimation.
 }
 \details{
-  The left-hand side of the formula may be any numeric
-  variable, just as with \code{lm} or a variable of class
-  "lcens," "mcens," or "qw."\cr For un- or left-censored
-  data, AMLE is used unless weights are specified in the
-  model, then MLE is used, through a call to survreg. For
-  any other censored data, MLE is used.
+The left-hand side of the formula may be any numeric
+variable, just as with \code{lm} or a variable of class
+"lcens," "mcens," or "qw."\cr For un- or left-censored
+data, AMLE is used unless weights are specified in the
+model, then MLE is used, through a call to survreg. For any
+other censored data, MLE is used.
 }
 \examples{
 # From application 1 in the vignettes
@@ -63,10 +62,10 @@ app1.lr <- loadReg(Phosphorus ~ model(1), data = app1.calib,
 print(app1.lr)
 }
 \references{
-  will need some.
+will need some.
 }
 \seealso{
-  \code{\link{censReg}}
+\code{\link{censReg}}
 }
 \keyword{censored}
 \keyword{loads}

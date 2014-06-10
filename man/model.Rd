@@ -2,7 +2,7 @@
 \alias{model}
 \title{Load Model}
 \usage{
-  model(model.no, data, flow, time)
+model(model.no, data, flow, time)
 }
 \arguments{
   \item{model.no}{the model number.}
@@ -16,11 +16,11 @@
   date column.}
 }
 \value{
-  Row number to select from \code{data} to build a
-  predefined model.
+Row number to select from \code{data} to build a predefined
+model.
 }
 \description{
-  Support function for building a predefined rating curve
-  load model.
+Support function for building a predefined rating curve
+load model.
 }
 

@@ -2,8 +2,8 @@
 \alias{print.loadReg}
 \title{Print Results}
 \usage{
-  \method{print}{loadReg} (x, digits = 4, brief = TRUE,
-    load.only = brief, ...)
+\method{print}{loadReg}(x, digits = 4, brief = TRUE, load.only = brief,
+  ...)
 }
 \arguments{
   \item{x}{an object of class "loadReg"---output from
@@ -20,19 +20,19 @@
   methods.}
 }
 \value{
-  The object \code{x} is returned invisibly.
+The object \code{x} is returned invisibly.
 }
 \description{
-  Print the results of an load rating-curve regression.
+Print the results of an load rating-curve regression.
 }
 \note{
-  The printed output includes the call, the coefficent
-  table, the estimated residual standard error, the
-  log-likelihood of the model and null model with the
-  attained p-value, and the computational method.
+The printed output includes the call, the coefficent table,
+the estimated residual standard error, the log-likelihood
+of the model and null model with the attained p-value, and
+the computational method.
 }
 \seealso{
-  \code{\link{loadReg}}
+\code{\link{loadReg}}
 }
 \keyword{utilities}
 

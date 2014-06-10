@@ -2,7 +2,7 @@
 \alias{nashSutcliffe}
 \title{Nash Sutcliffe}
 \usage{
-  nashSutcliffe(obs, est, na.rm = TRUE)
+nashSutcliffe(obs, est, na.rm = TRUE)
 }
 \arguments{
   \item{obs}{a vector of the observed values.}
@@ -15,12 +15,12 @@
   rating.}
 }
 \value{
-  A single numeric value representing the Nash-Sutcliffe
-  efficiency rating for the observed and estiamted data.
+A single numeric value representing the Nash-Sutcliffe
+efficiency rating for the observed and estiamted data.
 }
 \description{
-  Compute the Nash-Sutcliffe efficiency rating for model
-  estiamtes.
+Compute the Nash-Sutcliffe efficiency rating for model
+estiamtes.
 }
 \keyword{utilities}
 

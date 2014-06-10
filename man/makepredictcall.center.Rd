@@ -2,7 +2,7 @@
 \alias{makepredictcall.center}
 \title{Utility Function for Safe Prediction}
 \usage{
-  \method{makepredictcall}{center} (var, call)
+\method{makepredictcall}{center}(var, call)
 }
 \arguments{
   \item{var}{a variable.}
@@ -10,12 +10,11 @@
   \item{call}{the term in the formula, as a call.}
 }
 \value{
-  A replacement for \code{call} for the prediction
-  variable.
+A replacement for \code{call} for the prediction variable.
 }
 \description{
-  A utility to help \code{\link{model.frame.default}}
-  create the right matrices when predicting from models
-  with \code{center} term. Used only internally.
+A utility to help \code{\link{model.frame.default}} create
+the right matrices when predicting from models with
+\code{center} term. Used only internally.
 }
 

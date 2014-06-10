@@ -2,7 +2,7 @@
 \alias{vif.loadReg}
 \title{Variance Inflation Factors}
 \usage{
-  \method{vif}{loadReg} (model, ...)
+\method{vif}{loadReg}(model, ...)
 }
 \arguments{
   \item{model}{an object of class "loadReg"---output from
@@ -12,11 +12,11 @@
   methods.}
 }
 \value{
-  further arguments passed to or from other methods.
+further arguments passed to or from other methods.
 }
 \description{
-  Computes the variance inflation factor (Helsel and
-  Hirsch, 2002) for each variable in a load regression.
+Computes the variance inflation factor (Helsel and Hirsch,
+2002) for each variable in a load regression.
 }
 \examples{
 # From application 1 in the vignettes
@@ -27,7 +27,7 @@ app1.lr <- loadReg(Phosphorus ~ model(1), data = app1.calib,
 vif(app1.lr, app1.calib)
 }
 \seealso{
-  \code{\link{loadReg}}
+\code{\link{loadReg}}
 }
 \keyword{regression}
 

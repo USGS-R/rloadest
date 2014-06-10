@@ -2,7 +2,7 @@
 \alias{setXLDat}
 \title{Model Matrix}
 \usage{
-  setXLDat(data, flow, dates, Qadj, Tadj, model.no)
+setXLDat(data, flow, dates, Qadj, Tadj, model.no)
 }
 \arguments{
   \item{data}{the dataset containing dates and flow
@@ -22,11 +22,11 @@
   1-9.}
 }
 \value{
-  The model matrix corresponding to the selected model
-  number.
+The model matrix corresponding to the selected model
+number.
 }
 \description{
-  Internal support function to extract the model matrix for
-  one of the 9 predefined models in LOADEST.
+Internal support function to extract the model matrix for
+one of the 9 predefined models in LOADEST.
 }
 

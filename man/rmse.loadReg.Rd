@@ -2,7 +2,7 @@
 \alias{rmse.loadReg}
 \title{Root-Mean-Squared Error}
 \usage{
-  \method{rmse}{loadReg} (x, ...)
+\method{rmse}{loadReg}(x, ...)
 }
 \arguments{
   \item{x}{the output from \code{loadReg}.}
@@ -11,12 +11,12 @@
   methods.}
 }
 \value{
-  The estimated root-mean-squared error, also know as the
-  residual standard error.
+The estimated root-mean-squared error, also know as the
+residual standard error.
 }
 \description{
-  Compute the root-mean-squared error (RMSE) of the
-  difference between observed values and the fitted values
+Compute the root-mean-squared error (RMSE) of the
+difference between observed values and the fitted values
 }
 \examples{
 # From application 1 in the vignettes
@@ -27,6 +27,6 @@ app1.lr <- loadReg(Phosphorus ~ model(1), data = app1.calib,
 rmse(app1.lr, app1.calib)
 }
 \seealso{
-  \code{\link{loadReg}},
+\code{\link{loadReg}},
 }
 

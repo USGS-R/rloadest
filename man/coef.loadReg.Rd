@@ -2,8 +2,7 @@
 \alias{coef.loadReg}
 \title{Extract Model Coefficients}
 \usage{
-  \method{coef}{loadReg} (object, summary = FALSE,
-    which = "load", ...)
+\method{coef}{loadReg}(object, summary = FALSE, which = "load", ...)
 }
 \arguments{
   \item{object}{the output from \code{loadReg}.}
@@ -19,18 +18,18 @@
   methods.}
 }
 \value{
-  Either a names vector of the coefficients, if
-  \code{summary} is \code{FALSE} or a matrix of the
-  coefficients, their standard errors, z-scores, and
-  attained p-values, if \code{summary} is \code{TRUE}.
+Either a names vector of the coefficients, if
+\code{summary} is \code{FALSE} or a matrix of the
+coefficients, their standard errors, z-scores, and attained
+p-values, if \code{summary} is \code{TRUE}.
 }
 \description{
-  Extract the model coefficients from a load regression.
+Extract the model coefficients from a load regression.
 }
 \note{
-  The attained p-values are computed from the
-  log-likelihood test for AMLE regression and from a Wald
-  chi-square test for MLE regression.
+The attained p-values are computed from the log-likelihood
+test for AMLE regression and from a Wald chi-square test
+for MLE regression.
 }
 \examples{
 # From application 1 in the vignettes
@@ -42,7 +41,7 @@ app1.lr <- loadReg(Phosphorus ~ model(1), data = app1.calib,
 coef(app1.lr)
 }
 \seealso{
-  \code{\link{loadReg}},
+\code{\link{loadReg}},
 }
 \keyword{regression}
 
