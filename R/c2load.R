@@ -35,14 +35,14 @@ c2load <- function(conc, flow, flow.units="cfs", conc.units="",
   if(class(conc) == "qw") {
     ## If conc.units are not specified, then try to get from object
     if(conc.units == "") {
-      conc.units <- unique(Y@reporting.units)
+      conc.units <- unique(conc@reporting.units)
       conc.units <- conc.units[!is.na(conc.units)]
       if(length(conc.units) == 0L)
         conc.units <- ""
       else if(length(conc.units) > 1L) {
         ## Select the first one with a length greater than 1
         lens <- nchar(conc.units)
-        conc.units <- conc.unis[which(lens > 1L)[1L]]
+        conc.units <- conc.units[which(lens > 1L)[1L]]
       }
       ## Now make sure that as ... gets dropped
       conc.units <- strsplit(conc.units, " ")[[1L]][1L]

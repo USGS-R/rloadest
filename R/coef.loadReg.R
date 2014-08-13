@@ -23,7 +23,7 @@
 #'  station="Illinois River at Marseilles, Ill.")
 #'# Extract the coefficients
 #'coef(app1.lr)
-#' @S3method coef loadReg
+#' @export
 #' @method coef loadReg
 coef.loadReg <- function(object, summary=FALSE, which="load", ...) {
   ## Coding history:

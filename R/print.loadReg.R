@@ -14,7 +14,7 @@
 #' @seealso \code{\link{loadReg}}
 #' @keywords utilities
 #'
-#' @S3method print loadReg
+#' @export
 #' @method print loadReg
 print.loadReg <- function(x, digits=4, brief=TRUE, load.only=brief, ...) {
   ## Coding history:

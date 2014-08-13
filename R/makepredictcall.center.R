@@ -6,7 +6,8 @@
 #' @param var a variable.
 #' @param call the term in the formula, as a call.
 #' @return A replacement for \code{call} for the prediction variable.
-#' @S3method makepredictcall center
+#' @importFrom stats makepredictcall
+#' @export
 #' @method makepredictcall center
 makepredictcall.center <- function(var, call) {
   if (as.character(call)[1L] != "center") 

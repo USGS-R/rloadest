@@ -22,6 +22,9 @@
 #'
 #' @param fit the output from \code{loadReg}.
 #' @param newdata a data frame of the prediction variables.
+#' @param load.units a character string indicating the units of the
+#'predicted loads/fluxes. By default, uses the value specified in
+#'\code{loadReg}. See \code{\link{loadReg}} for a complete list of options.
 #' @param by the time frame for estimates. See \code{Details}.
 #' @param seopt a character string indicating how to comute the 
 #'standard error of the aggregated load estimates, must be either
@@ -44,6 +47,7 @@
 #' @useDynLib rloadest estlday
 #' @useDynLib rloadest estltot
 #' @export
+
 predLoad <- function(fit, newdata, load.units=fit$load.units, by="total", 
                      seopt="exact", allow.incomplete=FALSE, 
                      conf.int=0.95, print=FALSE) {
@@ -281,7 +285,7 @@ predLoad <- function(fit, newdata, load.units=fit$load.units, by="total",
         for(i in KinAll) {
           if(Flow0[i] == 0) {
             ## The correction factor to make it a true daily mean
-            CorrFact <- KikK[i]/gps.nday
+            CorrFact <- KinK[i]/gps.nday
             Flux[i] <- Flux[i] * CorrFact
             Std.Err[i] <- Std.Err[i] * CorrFact
             SEP[i] <- SEP[i] * CorrFact

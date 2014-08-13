@@ -265,7 +265,7 @@ predConc <- function(fit, newdata, by="day",
         for(i in KinAll) {
           if(Flow0[i] == 0) {
             ## The correction factor to make it a true daily mean
-            CorrFact <- KikK[i]/gps.nday
+            CorrFact <- KinK[i]/gps.nday
             Conc[i] <- Conc[i] * CorrFact
             Std.Err[i] <- Std.Err[i] * CorrFact
             SEP[i] <- SEP[i] * CorrFact

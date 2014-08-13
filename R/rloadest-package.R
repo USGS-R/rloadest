@@ -3,8 +3,8 @@
 #' \tabular{ll}{
 #' Package: \tab LOADEST\cr
 #' Type: \tab Package\cr
-#' Version: \tab 0.2\cr
-#' Date: \tab 2013-07-16\cr
+#' Version: \tab 0.3.0\cr
+#' Date: \tab 2014-08-08\cr
 #' License: \tab GPL 2\cr
 #' LazyLoad: \tab yes\cr
 #' }
@@ -38,15 +38,6 @@ NULL
 #' Example data representing atrazine
 #'
 #' @name Atrazine
-#' @docType data
-#' @keywords water quality data
-NULL
-
-#' Example Orthophosphate data included in LOADEST package
-#'
-#' Example data representing atrazine
-#'
-#' @name Orthophosphate
 #' @docType data
 #' @keywords water quality data
 NULL

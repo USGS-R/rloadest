@@ -1,6 +1,7 @@
 #'Extract Model Residuals
 #'
-#'Extract the residuals of a load regression.
+#'Extract the residuals from the load or concetration regression model. The residuals
+#'will be the same unless the log of flow is not an explanatory variable.
 #'
 #'The value for \code{type} can be any one of the following:
 #'\tabular{ll}{ Value \tab Description\cr
@@ -17,27 +18,30 @@
 #'are defined in the table above, in keeping with older versions of
 #'\code{loadReg}.
 #'
-#'@param object an object of class "loadReg"---output from \code{loadReg}
-#'@param type The type of residuals, see \bold{Details}.
-#'@param suppress.na.action logical, suppress the effects of the
+#' @param object an object of class "loadReg"---output from \code{loadReg}
+#' @param type The type of residuals, see \bold{Details}.
+#' @param suppress.na.action logical, suppress the effects of the
 #'\code{na.action} in the call to \code{loadReg} and return only the fitted
 #'values corresponding to the fitted data.
-#'@param \dots further arguments passed to or from other methods.
-#'@return The residuals from the regression as specified by \code{type}.
-#'@note The residuals from the load regression are the same as those from 
+#' @param model the type of model, must be either "load" or "concentration."
+#' @param \dots not used, required for other methods.
+#' @return The residuals from the regression as specified by \code{type}.
+#' @note The residuals from the load regression are the same as those from 
 #'the concentration regression, so there is no option to distinguish
 #'among those models.
-#'@seealso \code{\link{loadReg}}
-#'@keywords regression
-#'@S3method residuals loadReg
-#'@method residuals loadReg
+#' @seealso \code{\link{loadReg}}
+#' @keywords regression
+#' @export
+#' @method residuals loadReg
 residuals.loadReg <- function(object , type="working",
-                              suppress.na.action=FALSE, ...) {
+                              suppress.na.action=FALSE, 
+                              model=c("load", "concentration"), ...) {
   ## Coding history:
   ##    2013Jun19 DLLorenz Initial Coding
   ##
-  ## Extract the load model and 
-  object <- object$lfit
+  ## Extract the correct model
+  model <- match.arg(model)
+  object <- if(model == "load") object$lfit else object$cfit
   return(residuals(object, type=type, 
-                   subsetppress.na.action=suppress.na.action))
+                   suppress.na.action=suppress.na.action))
 }

@@ -7,8 +7,8 @@
 #' @param data the dataset.
 #' @param flow character string indicating the name of the 
 #'flow column.
-#' @param dates character string indicating the name of the 
-#'date column.
+#' @param time character string indicating the name of the 
+#'date/time column.
 #'
 #' @return Row number to select from \code{data} to build a predefined model.
 #'

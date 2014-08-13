@@ -39,8 +39,9 @@
 #'# Produce the full suite of diagnostic plots
 #'plot(app1.lr)
 #'}
-#'@S3method plot loadReg
-#'@method plot loadReg
+#' @import USGSwsGraphs
+#' @export
+#' @method plot loadReg
 plot.loadReg <- function(x, which='All', set.up=TRUE, span=1.0, ...) {
   ## Coding history:
   ##    2013Jun04 DLLorenz Initial Coding from plot.summary.censReg

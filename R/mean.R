@@ -12,8 +12,8 @@
 #'the missing value (\code{NA}).
 #'
 #' @rdname mean
+#' @export
 #' @method mean factor
-#' @S3method mean factor
 mean.factor <- function(x, ...) {
   z <- unique(x)
   return(if(length(z) == 1L) z else NA)
@@ -21,7 +21,7 @@ mean.factor <- function(x, ...) {
 
 #' @rdname mean
 #' @method mean character
-#' @S3method mean character
+#' @export
 mean.character <- function(x, ...) {
   z <- unique(x)
   return(if(length(z) == 1L) z else NA)

@@ -260,12 +260,13 @@ Figure 22 in Runkel and others (2004) requires daily load estimates and the cali
 <<echo=TRUE>>=
 # Get the estimation data
 data(app5.est)
-# Predict daily loads
+# Predict daily loads for 1999
 app5.ld <- predLoad(app5.lrR2, app5.est, by="day", 
                     load.units="pounds")
-# Get the 1999 data and merge to get daily flows and append 
-# load, note that the units must match what was dselected for
-# estimation! The mergeQ function is in the USGSwsBase package
+# Get the 1999 sample data and merge to get daily flows and compute 
+# load, note that the units must match what was selected for
+# estimation! The mergeQ function is in the USGSwsBase package;
+# the default names for dates and flow agree with the current datasets.
 data(app5.1999)
 app5.1999 <- mergeQ(app5.1999, Qdata=app5.est, Plot=FALSE)
 app5.1999$Load <- with(app5.1999, c2load(Alkalinity, FLOW, 

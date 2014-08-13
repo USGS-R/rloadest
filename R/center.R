@@ -9,7 +9,7 @@
 #' @note The centering value by default is computed by the method described
 #'in Cohn and others (1992).
 #' @return The centered value of \code{x}.
-#' @seealso \code{\link{quadratic}}, \code{\link{scale}}
+#' @seealso \code{\link[USGSwsBase]{quadratic}}, \code{\link{scale}}
 #' @references Cohn, T.A., Caulder, D.L., Gilroy, E.J., Zynjuk, L.D., and
 #'Summers, R.M., 1992, The validity of a simple statistical model for
 #'estimating fluvial constituent loads---An empirical study involving nutrient

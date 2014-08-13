@@ -20,17 +20,14 @@
 #'  flow = "FLOW", dates = "DATES", conc.units="mg/L",
 #'  station="Illinois River at Marseilles, Ill.")
 #'AICc(app1.lr)
+#' @importFrom stats logLik
 #' @export
 AICc <- function(object) {
   ## Coding history:
   ##    2014Jan17 DLLorenz Original Coding
   ##
-  ## Copy from AIC.default
-  ll <- if ("stats4" %in% loadedNamespaces()) 
-    stats4:::logLik
-  else logLik
   ## Compute the AIC
-  lls <- ll(object)
+  lls <- logLik(object)
   k <- attr(lls, "df")
   retval <- -2 * as.numeric(lls) + 2 * k
   ## Compute the corrected value

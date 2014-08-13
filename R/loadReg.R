@@ -3,10 +3,14 @@
 #' Build a rating-curve (regression) model for river load estimation.
 #'
 #' The left-hand side of the formula may be any numeric variable, just as with
-#'\code{lm} or a variable of class "lcens," "mcens," or "qw."\cr
+#'\code{lm} or a variable of class "lcens," "mcens," or "qw." Also permitted are
+#'variables constructed using \code{Surv} of \code{type} "right,", "interval," or
+#'"interval2" (for left-censored data, use \code{as.lcens}.\cr
 #'For un- or left-censored data, AMLE is used unless weights are specified in
-#'the model, then MLE is used, through a call to survreg. For any other 
-#'censored data, MLE is used.
+#'the model, then MLE is used, through a call to \code{survreg}. For any other 
+#'censored data, MLE is used.\cr
+#'See \code{\link{loadConvFactor}} for details about valid values for 
+#'\code{flow.units}, \code{con.units} and \code{load.units}.
 #'
 #' @param formula a formula describing the regression model. See \bold{Details}.
 #' @param data the data to search for the variables in \code{formula}.
@@ -25,8 +29,12 @@
 #' @param station character string description of the station.
 #'
 #' @return An object of class "loadReg."
-#' @seealso \code{\link{censReg}}
-#' @references will need some.
+#' @seealso \code{\link{censReg}}, \code{\link{as.lcens}}, \code{\link{as.mcens}},
+#'\code{\link{Surv}}
+#' @references
+#'Runkel, R.L., Crawford, C.G., and Cohn, T.A., 2004, Load estimator (LOADEST):
+#'a FORTRAN program for estimating constituent loads in streams and rivers: U.S.
+#'Geological Survey Techniques and Methods book 4, chap. A5, 69 p.
 #' @keywords regression censored loads
 #' @examples
 #'# From application 1 in the vignettes
@@ -36,7 +44,8 @@
 #'  station="Illinois River at Marseilles, Ill.")
 #'print(app1.lr)
 #'
-#'@export
+#' @import USGSwsQW
+#' @export
 loadReg <- function(formula, data, subset, na.action, flow, dates,
                     flow.units="cfs", conc.units="", load.units="kg", 
                     time.step="day", station="") {
@@ -119,9 +128,9 @@ loadReg <- function(formula, data, subset, na.action, flow, dates,
     X <- setXLDat(data[subset,], flow, dates, Qadj, Tadj, model.no)
     xvars <- colnames(X)[-1L]
   }
-  if(class(Y) == "numeric")
+  if(class(Y) == "numeric") {
     Y <- as.lcens(Y)
-  else if(class(Y) == "qw") {
+  } else if(class(Y) == "qw") {
     ## If conc.units are not specified, then try to get from object
     if(conc.units == "") {
       conc.units <- unique(Y@reporting.units)
@@ -131,7 +140,7 @@ loadReg <- function(formula, data, subset, na.action, flow, dates,
       else if(length(conc.units) > 1L) {
         ## Select the first one with a length greater than 1
         lens <- nchar(conc.units)
-        conc.units <- conc.unis[which(lens > 1L)[1L]]
+        conc.units <- conc.units[which(lens > 1L)[1L]]
       }
       ## Now make sure that as ... gets dropped
       conc.units <- strsplit(conc.units, " ")[[1L]][1L]
@@ -145,8 +154,28 @@ loadReg <- function(formula, data, subset, na.action, flow, dates,
       Y <- as.mcens(Y)
     else
       Y <- as.lcens(Y)
-  }
-  else if(class(Y) == "lcens" && !is.null(saved.na.action))
+  } else if(class(Y) == "Surv") {
+    type <- attr(Y, "type")
+    if(type == "left")
+      stop("Use as.lcens for left-censored data")
+    if(type == "interval") {
+      # For interval data, time 2 is only important for interval censored data:
+      # time1 contains the uper/lower limit for left- or right-censored data
+      Ymat <- unclass(Y)
+      Ystat <- as.integer(Ymat[, 3L])
+      if(any(Ystat) > 2L # interval
+         || any(Ystat) < 1L ) { # right
+        # Convert to mcens, first left-censored: swap columns
+        Ymat[, 2L] <- ifelse(Ystat == 2L, Ymat[, 1L], Ymat[, 2L]) 
+        Ymat[, 1L] <- ifelse(Ystat == 2L, -Inf, Ymat[, 1L])
+        # right-censored: set time2 to Inf
+        Ymat[, 2L] <- ifelse(Ystat == 0L, Inf, Ymat[, 2L])
+        Y <- as.mcens(Ymat[, 1L], Ymat[, 2L])
+      } else # Only left-censored
+        Y <- as.lcens(Y[, 1L], censor.codes=Ystat==2L)
+    } else
+      stop("Invalid Surv type: ", type)
+  } else if(class(Y) == "lcens" && !is.null(saved.na.action))
     Y@censor.codes <- Y@censor.codes[-saved.na.action]
   ## Logic checks for time.step and class of Time
   if(class(Time)[1L] != "Date" && time.step == "day")
@@ -180,7 +209,7 @@ loadReg <- function(formula, data, subset, na.action, flow, dates,
     fit1 <- censReg_AMLE.fit(Y, X[,1L, drop=FALSE], "lognormal")
   } else {
     cfit <- censReg_MLE.fit(Y, X, rep(1, length(Y)), "lognormal")
-    fit1 <- censReg_AMLE.fit(Y, X[,1L, drop=FALSE], 
+    fit1 <- censReg_MLE.fit(Y, X[,1L, drop=FALSE], 
                              rep(1, length(Y)), "lognormal")
   }
   cfit$LLR1 <- fit1$LLR

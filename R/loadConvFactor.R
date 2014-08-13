@@ -3,9 +3,15 @@
 #' Computes the conversion factor to compute the flux units 
 #'(load units) from the concentration and flow units
 #'
-#' @param flow.units character string describing the flow unit
-#' @param conc.units character string describing the concentration unit
-#' @param load.units character string describing the load unit
+#' @param flow.units character string describing the flow unit. The only valid values are
+#'"cubic meter per second," "cms," "cubic feet per second," or "cfs."
+#' @param conc.units character string describing the concentration unit. The valid units
+#'are "mg/l," "mg/L," "ug/l," "ug/L," "ng/l," "ng/L," "milligrams per liter,"
+#'"micrograms per liter," "nanograms per liter," "col/100mL," "col/dL," or
+#'"colonies per 100mL."
+#' @param load.units character string describing the load unit. The valid values are
+#'"pounds," "tons," "mg," "milligrams," "grams," "g," "kilograms," "kg," 
+#'"metric tons," "Mg," or "million colonies."
 #' @keywords unit conversions
 #' @return The conversion factor.
 #' @examples
@@ -17,10 +23,12 @@ loadConvFactor <- function(flow.units, conc.units, load.units) {
   ##    2012Aug01 ldecicco Conversion to R
   ##    2013May31 DLLorenz Added abbreviations and renamed to loadConvFactor
   ##
-  if(flow.units %in% c("cubic meter per second", "cms"))
+  if(flow.units %in% c("cubic meter per second", "cms")) {
     conv.factor <- 86400000 # liters per day
-  else # assume that the flow is cubic feet per second
+  } else if(flow.units %in% c("cubic feet per second", "cfs")) {
     conv.factor <- 28.317 * 86400 # liters per day
+  } else
+    stop("Invalid flow units: ", flow.units)
   ## conversion from mg/L to output
   if(is.null(load.factor <- switch(load.units,
                                    "pounds" = 2.204623e-6,
