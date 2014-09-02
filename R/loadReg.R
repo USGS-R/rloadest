@@ -20,12 +20,13 @@
 #'flow column.
 #' @param dates character string indicating the name of the 
 #'date column.
-#' @param flow.units character string describing the flow unit.
+#' @param flow.units character string describing the flow units.
 #' @param conc.units character string describing the concentration 
 #'unit.
 #' @param load.units character string describing the load unit.
 #' @param time.step character string describing the time step of 
-#'the calibration data.
+#'the calibration data. Must be one of "instantaneous," "2 hours," "3 hours,"
+#'"4 hours," "6 hours," "12 hours," or "day." The default is "day."
 #' @param station character string description of the station.
 #'
 #' @return An object of class "loadReg."
@@ -56,7 +57,7 @@ loadReg <- function(formula, data, subset, na.action, flow, dates,
   PredMod <- terms(formula, "model", data = data)
   indMod <- attr(PredMod, "specials")$model
   time.step <- match.arg(time.step, 
-                         c("instantaneous", "1 hour", "2 hours",
+                         c("instantaneous", "2 hours",
                          "3 hours", "4 hours", "6 hours",
                          "8 hours", "12 hours", "day"))
   call <- match.call()

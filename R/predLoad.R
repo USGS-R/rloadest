@@ -96,6 +96,14 @@ predLoad <- function(fit, newdata, load.units=fit$load.units, by="total",
     attr(newdata[[dates]], "tzone") <- ntz
   } else { # Must be instantaneous
     gps <- format(newdata[[dates]])
+    difdays <- range(newdata[[dates]])
+    difdays <- difftime(ceiling_date(difdays[2L], unit="day"), 
+                        floor_date(difdays[1L], unit="day"),
+                        units="days")
+    gps.nday <- round(nrow(newdata)/as.numeric(difdays), 6L) # should get to near integer
+    if((gps.nday %% 1) != 0 && !(by %in% c("unit", "day")))
+      stop("newdata must have the same number of observations each day")
+    gps.nday <- as.integer(gps.nday)
   }
   lcf <- loadUnitConv(fit$load.units, load.units)
   if(model.no == 99L) {
@@ -305,7 +313,6 @@ predLoad <- function(fit, newdata, load.units=fit$load.units, by="total",
     }
     names(retval)[6L:7L] <- Names
   } else if(by == "total") {
-    ## For now, only 1 obs per day (assumed and hard coded)
     KDays <- seq(nrow(model.inp))
     Flow <- newdata[[flow]]
     Sum <- rowSums(model.inp) # Use to detect any missing values
@@ -325,6 +332,7 @@ predLoad <- function(fit, newdata, load.units=fit$load.units, by="total",
     }
     Zdays <- which(Flow == 0)
     NDIM <- as.integer(length(KDays))
+    NDays <- as.integer(NDIM/gps.nday)
     if(length(Zdays))
       KDays <- KDays[-Zdays]
     out.data <- .Fortran("estltot",
@@ -336,7 +344,7 @@ predLoad <- function(fit, newdata, load.units=fit$load.units, by="total",
                          SCV_IN=fit$lfit$SCV,
                          npred=as.integer(length(KDays)),
                          xlpred=model.inp[KDays,],
-                         NDAYS=NDIM,
+                         NDAYS=NDays,
                          N_DAY=gps.nday,
                          SDEXACT=seopt=="exact",
                          load=double(1L),
@@ -352,7 +360,7 @@ predLoad <- function(fit, newdata, load.units=fit$load.units, by="total",
                            SEP=NA_real_, L95=NA_real_, U95=NA_real_)
     } else {
       ## OK, we've had a successful run, pack the data into a data frame
-      retval <- data.frame(Period="total", Ndays=NDIM,
+      retval <- data.frame(Period="total", Ndays=NDays,
                            Flux=out.data$load * lcf, 
                            Std.Err=sqrt(out.data$loadvar) * lcf, 
                            SEP=out.data$loadsep * lcf, 
@@ -362,7 +370,6 @@ predLoad <- function(fit, newdata, load.units=fit$load.units, by="total",
   } else { # Any other kind of aggregation
     Flow <- newdata[[flow]] # Needed for summary
     retval <- tapply(seq(nrow(model.inp)), newdata[[by]], FUN=function(period) {
-      ## For now, only 1 obs per day (assumed and hard coded)
       KDays <- period
       Flow <- newdata[period, flow]
       Sum <- rowSums(model.inp[period,]) # Use to detect any missing values
@@ -398,6 +405,7 @@ predLoad <- function(fit, newdata, load.units=fit$load.units, by="total",
         }
         Zdays <- which(Flow == 0)
         NDIM <- as.integer(length(KDays))
+        NDays <- as.integer(NDIM/gps.nday)
         if(length(Zdays))
           KDays <- KDays[-Zdays]
         out.data <- .Fortran("estltot",
@@ -409,7 +417,7 @@ predLoad <- function(fit, newdata, load.units=fit$load.units, by="total",
                              SCV_IN=fit$lfit$SCV,
                              npred=as.integer(length(KDays)),
                              xlpred=model.inp[KDays,],
-                             NDAYS=NDIM,
+                             NDAYS=NDays,
                              N_DAY=gps.nday,
                              SDEXACT=seopt=="exact",
                              load=double(1L),
@@ -425,7 +433,7 @@ predLoad <- function(fit, newdata, load.units=fit$load.units, by="total",
                                SEP=NA_real_, L95=NA_real_, U95=NA_real_)
         } else {
           ## OK, we've had a successful run, pack the data into a data frame
-          retby <- data.frame(Period="period", Ndays=NDIM,
+          retby <- data.frame(Period="period", Ndays=NDays,
                                Flux=out.data$load * lcf, 
                                Std.Err=sqrt(out.data$loadvar) * lcf, 
                                SEP=out.data$loadsep * lcf, 

@@ -21,7 +21,7 @@ flow column.}
 \item{dates}{character string indicating the name of the
 date column.}
 
-\item{flow.units}{character string describing the flow unit.}
+\item{flow.units}{character string describing the flow units.}
 
 \item{conc.units}{character string describing the concentration
 unit.}
@@ -29,7 +29,8 @@ unit.}
 \item{load.units}{character string describing the load unit.}
 
 \item{time.step}{character string describing the time step of
-the calibration data.}
+the calibration data. Must be one of "instantaneous," "2 hours," "3 hours,"
+"4 hours," "6 hours," "12 hours," or "day." The default is "day."}
 
 \item{station}{character string description of the station.}
 }

@@ -80,12 +80,13 @@
          CALL TACIT_LOADS_NC(NPAR,NPRED,XLSPRED,MVUE,LOAD,
      &                       LOADVAR,PARMLE,BIAS,SBIAS,CV,SCV,CV_M)
       ENDIF
-      LOAD = LOAD/NDAYS
+      LOAD = LOAD/NDAYS/N_DAY
 *
 *     Compute standard error of prediction assuming errors
 *     uncorrelated lag 1 (approx correct for mid-size rivers -- see
 *     Tim Cohn 1989 notes)
 *     
+      LOADVAR = LOADVAR/(N_DAY*N_DAY)
       CALL LOADSEP(N_DAY,NPRED,MVUE,S2,LOADVAR,LOADSP)
       LOADVAR = LOADVAR/(NDAYS*NDAYS)
 *
