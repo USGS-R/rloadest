@@ -16,7 +16,11 @@
 #'the prediction intervals, computed from the SEP.
 #'
 #' @param fit the output from \code{loadReg}.
-#' @param newdata a data frame of the prediction variables.
+#' @param newdata a data frame of the prediction variables. MIssing values
+#'are not permitted in any column in \code{newdata}. Observations with
+#'missing values \code{NAs} must be removed before prediction. Columns that
+#'are not needed for prediction that contain missing values can be removed
+#'before removing all rows with missing values.
 #' @param by the time frame for estimates. See \code{Details}.
 #' @param allow.incomplete compute loads for periods withing
 #'missing values or incomplete record? See \code{Details}.
@@ -38,8 +42,11 @@ predConc <- function(fit, newdata, by="day",
   ## Coding history:
   ##    2013Jul18 DLLorenz Original Coding from predLoad
   ##    2013Dec05 DLLorenz Bug fix
+  ##    2014Sep23 DLLorenz Missing check on newdata
   ##
   ## By options and other preliminary code
+  if(any(is.na(newdata)))
+    stop("newdata contains missing values, remove before prediction")
   ByOpt <- c("unit", "day")
   Qadj <- fit$Qadj
   Tadj <- fit$Tadj

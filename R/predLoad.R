@@ -20,8 +20,12 @@
 #'documentation for LOADEST, but the values that are reported are 
 #'the prediction intervals, computed from the SEP.
 #'
-#' @param fit the output from \code{loadReg}.
-#' @param newdata a data frame of the prediction variables.
+#' @param fit the output from \code{loadReg}. 
+#' @param newdata a data frame of the prediction variables. MIssing values
+#'are not permitted in any column in \code{newdata}. Observations with
+#'missing values \code{NAs} must be removed before prediction. Columns that
+#'are not needed for prediction that contain missing values can be removed
+#'before removing all rows with missing values.
 #' @param load.units a character string indicating the units of the
 #'predicted loads/fluxes. By default, uses the value specified in
 #'\code{loadReg}. See \code{\link{loadReg}} for a complete list of options.
@@ -55,8 +59,11 @@ predLoad <- function(fit, newdata, load.units=fit$load.units, by="total",
   ##    2013Jun06 DLLorenz Original Coding
   ##    2013Jul03 DLLorenz Added code to deal with unit values
   ##    2013Dec05 DLLorenz Bug fix
+  ##    2014Sep23 DLLorenz Missing check on newdata
   ##
   ## By options and other preliminary code
+  if(any(is.na(newdata)))
+    stop("newdata contains missing values, remove before prediction")
   ByOpt <- c("unit", "day", "month", "water year", "calendar year", "total")
   load.units
   seopt <- match.arg(seopt, c("exact", "approximate"))
