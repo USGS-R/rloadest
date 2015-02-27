@@ -15,7 +15,7 @@
 #'  station="Illinois River at Marseilles, Ill.")
 #'vif(app1.lr, app1.calib)
 #' @keywords regression
-#' @import USGSwsStats
+#' @import smwrStats
 #' @export
 #' @method vif loadReg
 vif.loadReg <- function(model, ...) {

@@ -18,7 +18,7 @@
 #'  flow = "FLOW", dates = "DATES", conc.units="mg/L",
 #'  station="Illinois River at Marseilles, Ill.")
 #'rmse(app1.lr)
-#' @import USGSwsStats
+#' @import smwrStats
 #' @export
 #' @method rmse loadReg
 rmse.loadReg <- function(x, model=c("load", "concentration"), ...) {

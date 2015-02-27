@@ -1,8 +1,8 @@
 Package: rloadest
 Type: Package
 Title: River Load Estimation
-Version: 0.3.0
-Date: 2014-08-08
+Version: 0.4.0
+Date: 2015-02-27
 Author: Dave Lorenz, Rob Runkel, Laura De Cicco
 Maintainer: Dave Lorenz <lorenz@usgs.gov>
 Description: Collection of functions to make constituent load estimations
@@ -10,12 +10,13 @@ Description: Collection of functions to make constituent load estimations
 License: File LICENSE
 Depends:
     R (>= 3.0.0),
-    USGSwsGraphs,
-    USGSwsStats,
-    USGSwsQW
+    smwrGraphs,
+    smwrStats,
+    smwrQW
 Imports:
     stats
 Suggests:
-    USGSwsBase
+    smwrBase,
+    dataRetrieval
 LazyLoad: yes
 LazyData: yes

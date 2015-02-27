@@ -3,9 +3,9 @@
 #' \tabular{ll}{
 #' Package: \tab LOADEST\cr
 #' Type: \tab Package\cr
-#' Version: \tab 0.3.0\cr
-#' Date: \tab 2014-08-08\cr
-#' License: \tab GPL 2\cr
+#' Version: \tab 0.4.0\cr
+#' Date: \tab 2015-02-27\cr
+#' License: \tab File\cr
 #' LazyLoad: \tab yes\cr
 #' }
 #'

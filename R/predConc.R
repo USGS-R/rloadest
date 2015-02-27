@@ -20,7 +20,8 @@
 #'are not permitted in any column in \code{newdata}. Observations with
 #'missing values \code{NAs} must be removed before prediction. Columns that
 #'are not needed for prediction that contain missing values can be removed
-#'before removing all rows with missing values.
+#'before removing all rows with missing values. The maximum number of rows
+#'permitted in \code{newdata} is 176000.
 #' @param by the time frame for estimates. See \code{Details}.
 #' @param allow.incomplete compute loads for periods withing
 #'missing values or incomplete record? See \code{Details}.
@@ -47,6 +48,8 @@ predConc <- function(fit, newdata, by="day",
   ## By options and other preliminary code
   if(any(is.na(newdata)))
     stop("newdata contains missing values, remove before prediction")
+  if(nrow(newdata) > 176000L)
+    stop("newdata has too many rows, the size limit is 176000")
   ByOpt <- c("unit", "day")
   Qadj <- fit$Qadj
   Tadj <- fit$Tadj
@@ -194,7 +197,7 @@ predConc <- function(fit, newdata, by="day",
     ## Preserve flow for later
     Flow <- newdata[[flow]]
     if(time.step == "day") {
-      KDate <- as.Date(newdata[[dates]])
+      KDate <- as.Date(as.POSIXlt(newdata[[dates]]))
       KDays <- seq(nrow(model.inp))
       KinAll <- KDays
       ## Exclude NAs and presumably 0 flows
@@ -204,7 +207,7 @@ predConc <- function(fit, newdata, by="day",
     } else {
       Kin <- seq(nrow(model.inp))
       Kin <- Kin[is.finite(rowSums(model.inp))]
-      KDate <- as.Date(newdata[[dates]])
+      KDate <- as.Date(as.POSIXlt(newdata[[dates]]))
       Kdy <- as.integer(KDate)
       KDate <- unique(KDate)
       Kdy <- Kdy - Kdy[1L] + 1L # make relative to first day (Index)

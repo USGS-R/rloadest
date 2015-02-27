@@ -64,6 +64,10 @@ selBestModel <- function(constituent, data, subset, na.action, flow, dates,
     }
   }
   options(warn)
+  ## But warn if fewer N than 70
+  if(model$lfit$NOBSC < 70L)
+    warning("Selected model may be over fit: only ", 
+            model$lfit$NOBSC, " observations.")
   ## Replace model.eval with complete list
   retval$model.eval <- model.eval
   return(retval)

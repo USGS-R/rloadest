@@ -6,17 +6,16 @@
 *
 ************************************************************************
       SUBROUTINE estltot(NPAR,PARMLE,BIAS,CV_IN,SBIAS,SCV_IN,
-     &     NPRED,XLPRED,NDAYS,N_DAY,SDEXACT,
+     &     NPRED,XLPRED,NDAYS,N_DAY,sdin,
      &     LOAD,LOADVAR,LOADLOW,LOADUP,LOADSP,IERR)
 *     
 *     dimensional parameters and logical devices
 *
-      INCLUDE 'fmodules.inc'
+      INCLUDE 'fmodules.h'
 *
 *     subroutine arguments
 *
-      INTEGER*4 NPAR,NPRED,NDAYS,N_DAY,IERR
-      LOGICAL SDEXACT
+      INTEGER*4 NPAR,NPRED,NDAYS,N_DAY,IERR, sdin
       DOUBLE PRECISION PARMLE(*),BIAS(*),CV_IN(NPAR+1, *),SBIAS(*),
      &     SCV_IN(NPAR+1, *),XLPRED(NPRED,*)
       DOUBLE PRECISION LOAD,LOADVAR,LOADLOW,
@@ -24,6 +23,7 @@
 *
 *     local vars
 *
+      LOGICAL SDEXACT
       INTEGER I,K
       DOUBLE PRECISION MVUE(MAXOBSE),CV(MAXPARMS+1,MAXPARMS+1),
      &   SCV(MAXPARMS+1,MAXPARMS+1),XLSPRED(MAXOBSE,MAXPARMS),S2,
@@ -31,6 +31,11 @@
 *
 *     set initial values and check limits
 *
+      if(sdin .eq. 1) then
+         SDEXACT = .TRUE.
+      else
+         SDEXACT = .FALSE.
+      endif
       IERR=0
       IF(NPAR .gt. MAXPARMS) IERR=1
       IF(NOBSC .gt. MAXOBSC) IERR=2

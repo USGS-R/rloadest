@@ -6,6 +6,7 @@
 
 %\VignetteIndexEntry{Example Application 3}
 %\VignetteDepends{rloadest}
+%\VignetteDepends{dataRetrieval}
 
 \begin{document}
 \SweaveOpts{concordance=TRUE}
@@ -38,14 +39,15 @@ The first step is to retrieve the water-quality and flow data. The water-quality
 <<echo=TRUE>>=
 # Load the rloadest package, which requires the USGSwsQW and
 # other packages that contain the necessary functions
+library(dataRetrieval)
 library(rloadest)
 app3.qw <- importNWISqw("01646580", params="00660", 
     begin.date="2001-10-01", end.date="2010-09-30")
-app3.flow <- renCol(readNWIS("01646502",
-    begin.date="2001-10-01", end.date="2010-09-30"))
+app3.flow <- renameNWISColumns(readNWISdv("01646502", "00060",
+    startDate="2001-10-01", endDate="2010-09-30"))
 @
 
-The second step is to merge the flow data with the water-quality data to produce a calibration dataset. The function \texttt{mergeQ} extracts the flow data from the flow dataset and merges the daily flow with the sample date in the water-quality dataset. For this analysis, we assume that a sample on any given day represents a valid estimate of the mean daily concentration. It requires that the names of the dates column match between the two datasets; the column \texttt{sample\_dt} in the water-quality data set is renamed to \texttt{datetime} to match the date column in the flow dataset. A further requirement of \texttt{mergeQ} is that there are no replicate samples taken on the same day. In general, the concentration values with a day agree very well, for this example, simply delete the duplicated days. For other cases, it may be better to compute a mean-daily concentration.
+The second step is to merge the flow data with the water-quality data to produce a calibration dataset. The function \texttt{mergeQ} extracts the flow data from the flow dataset and merges the daily flow with the sample date in the water-quality dataset. For this analysis, we assume that a sample on any given day represents a valid estimate of the mean daily concentration. It requires that the names of the dates column match between the two datasets; the column \texttt{sample\_dt} in the water-quality data set is renamed to \texttt{Date} to match the date column in the flow dataset. A further requirement of \texttt{mergeQ} is that there are no replicate samples taken on the same day. In general, the concentration values with a day agree very well, for this example, simply delete the duplicated days. For other cases, it may be better to compute a mean-daily concentration.
 
 <<echo=TRUE>>=
 # There are duplicated samples in this dataset. Print them
@@ -54,9 +56,9 @@ subset(app3.qw, sample_dt %in%
 # Remove the duplicates
 app3.qw <- subset(app3.qw, !duplicated(sample_dt))
 # Now change the date column name and merge
-names(app3.qw)[2] <- "datetime"
+names(app3.qw)[2] <- "Date"
 # Supress the plot in this merge
-app3.calib <- mergeQ(app3.qw, FLOW="Flow", DATES="datetime", 
+app3.calib <- mergeQ(app3.qw, FLOW="Flow", DATES="Date", 
                      Qdata=app3.flow, Plot=FALSE)
 @
 
@@ -68,7 +70,7 @@ The \texttt{loadReg} function is used to build the rating-curve model for consti
 <<echo=TRUE>>=
 # Create and print the load model.
 app3.lr <- loadReg(OrthoPhosphate.PO4 ~ model(9), data = app3.calib, 
-  flow = "Flow", dates = "datetime",
+  flow = "Flow", dates = "Date",
   station="Potomac River at Chain Bridge, at Washington, DC")
 print(app3.lr)
 @
@@ -159,7 +161,7 @@ Figure 5 suggested a distinct pattern in the residuals in the early part of the 
 <<echo=TRUE>>=
 # setSweave is required for the vignette.
 setSweave("app3_06", 5, 5)
-timePlot(app3.calib$datetime, residuals(app3.lr),
+timePlot(app3.calib$Date, residuals(app3.lr),
          Plot=list(what="points"), ytitle="Residuals")
 refLine(horizontal=0)
 refLine(vertical=as.Date("2001-10-01") + years(0:9))
@@ -176,7 +178,7 @@ The residuals for water-year 2002 are mostly greater than 0; those for watery-ye
 
 <<echo=TRUE>>=
 mean(app3.flow$Flow)
-with(app3.flow, tapply(Flow, waterYear(datetime), mean))
+with(app3.flow, tapply(Flow, waterYear(Date), mean))
 @
 
 \eject
@@ -191,11 +193,10 @@ The first step in modeling flow anomalies required retrieving data for a longer 
 where $A1yr_i$ is the 1-year anomaly of the log of flow, $HFV_i$ is remaining high-frequency variation in the log of flow, and $dT_i$ is the decimal time for observation $i$.
 
 <<echo=TRUE>>=
-app3.anom <- renCol(readNWIS("01646502",
-                             begin.date="1999-10-01", 
-                             end.date="2010-09-30"))
+app3.anom <- renameNWISColumns(readNWISdv("01646502", "00060",
+  startDate="1999-10-01", endDate="2010-09-30"))
 app3.anom <- cbind(app3.anom, anomalies(log(app3.anom$Flow), 
-                                        a1yr=365))
+  a1yr=365))
 # The head would show missing values for a1yr and HFV
 tail(app3.anom)
 @
@@ -205,17 +206,17 @@ The next step is to merge the flow and anomaly data with the water-quality data.
 <<echo=TRUE>>=
 # Supress the plot in this merge and overwrite app3.calib
 app3.calib <- mergeQ(app3.qw, FLOW=c("Flow", "a1yr", "HFV"),
-                     DATES="datetime", 
+                     DATES="Date", 
                      Qdata=app3.anom, Plot=FALSE)
 @
 
-The final step is to construct the model. Note that flow is not a necessary part of the model because it is represented by the anomalies, linear time is represented by \texttt{dectime(datetime)}, and the seasonal components by \texttt{fourier(datetime)}. Note also that decimal time is not centered, but could be by using the \texttt{center} function.
+The final step is to construct the model. Note that flow is not a necessary part of the model because it is represented by the anomalies, linear time is represented by \texttt{dectime(Date)}, and the seasonal components by \texttt{fourier(Date)}. Note also that decimal time is not centered, but could be by using the \texttt{center} function.
 
 <<echo=TRUE>>=
-app3.lra <- loadReg(OrthoPhosphate.PO4 ~ a1yr + HFV + dectime(datetime)
-                    + fourier(datetime),
+app3.lra <- loadReg(OrthoPhosphate.PO4 ~ a1yr + HFV + dectime(Date)
+                    + fourier(Date),
                     data = app3.calib, 
-                   flow = "Flow", dates = "datetime",
+                   flow = "Flow", dates = "Date",
                    station="Potomac River at Chain Bridge, at Washington, DC")
 print(app3.lra)
 @
@@ -288,7 +289,7 @@ Figure 11 shows the partial residual plot for decimal time. This one was selecte
 <<echo=TRUE>>=
 # setSweave is required for the vignette.
 setSweave("app3_11", 5, 5)
-plot(app3.lra, which="dectime(datetime)", set.up=FALSE)
+plot(app3.lra, which="dectime(Date)", set.up=FALSE)
 graphics.off()
 @
 <<results=tex, echo=FALSE>>=
@@ -304,7 +305,7 @@ cat("\\paragraph{}\n")
 Because we used anomalies in the regression model, we must be very careful to use the same anomalies in the estimation data. The data that were retrieved to compute the anomalies include dates outside of the calibration period, so must be subsetted to the calibration period. We'll compute load estimates for the water years 2002 through 2010
 
 <<echo=TRUE>>=
-app3.est <- subset(app3.anom, datetime > as.Date("2001-09-30"))
+app3.est <- subset(app3.anom, Date > as.Date("2001-09-30"))
 predLoad(app3.lra, newdata = app3.est, by="water year",
          print=TRUE)
 @

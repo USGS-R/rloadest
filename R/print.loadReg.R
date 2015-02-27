@@ -11,6 +11,7 @@
 #' @note The printed output includes the call, the coefficent table, the
 #'estimated residual standard error, the log-likelihood of the model and
 #'null model with the attained p-value, and the computational method.
+#' NEED more details about what is printed and the difference in output due to arguments
 #' @seealso \code{\link{loadReg}}
 #' @keywords utilities
 #'
@@ -30,6 +31,24 @@ print.loadReg <- function(x, digits=4, brief=TRUE, load.only=brief, ...) {
   ## Print the results of the input data and model evaluation.
   ## to nearly match the output from LOADEST if brief is FALSE
   load.only
+  ## Catch errors/warnings
+  if(x$lfit$IERR == -201L) {
+    warning("Excessive censoring, greater than 80%")
+  } else if(x$lfit$IERR == -202L) {
+    warning("Excessive censoring, fewer than 3 uncensored values for each parameter")
+  } else if(x$lfit$IERR == 1L) {
+    stop("Too many parameters")
+  } else if(x$lfit$IERR == 2L) {
+    stop("Too many observations")
+  } else if(x$lfit$IERR == 201L) {
+    stop("Excessive censoring, greater than 90%")
+  } else if(x$lfit$IERR == 202L) {
+    stop("Excessive censoring, fewer than 1.5 uncensored values for each parameter")
+  } else if(x$lfit$IERR == 203L) {
+    stop("Variance of uncensored values is 0")
+  } else if(x$lfit$IERR > 0L) {
+    stop("\nFatal error in censReg, error code: ", x$IERR, "\n")
+  }
   if(brief)
     cat("*** Load Estimation ***\n\n")
   else {

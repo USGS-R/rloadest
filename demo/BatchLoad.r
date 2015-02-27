@@ -15,6 +15,7 @@ ld.unt <- "kg"
 # ** End of user input **
 
 # Set the required libraries
+library(dataRetrieval)
 library(rloadest)
 
 # Loop for each station
@@ -27,7 +28,7 @@ for(sta in Staids) {
   # Get the flow and water-quality data--use temporary dataset
   # names that can be overwritten to manipulate and then save
   # in the names provided above.
-  Qtmp <- renCol(readNWIS(sta, begin.date=Start, end.date=End))
+  Qtmp <- renameNWISColumns(readNWISdv(sta, "00060", startDate=Start, endDate=End))
   QWtmp <- importNWISqw(sta, params=Params, begin.date=Start, 
                         end.date=End, use.pnames=TRUE)
   # Make sure that the recorded values are daily averages

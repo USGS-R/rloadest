@@ -21,11 +21,12 @@
 #'the prediction intervals, computed from the SEP.
 #'
 #' @param fit the output from \code{loadReg}. 
-#' @param newdata a data frame of the prediction variables. MIssing values
+#' @param newdata a data frame of the prediction variables. Missing values
 #'are not permitted in any column in \code{newdata}. Observations with
 #'missing values \code{NAs} must be removed before prediction. Columns that
 #'are not needed for prediction that contain missing values can be removed
-#'before removing all rows with missing values.
+#'before removing all rows with missing values. The maximum number of rows
+#'permitted in \code{newdata} is 176000.
 #' @param load.units a character string indicating the units of the
 #'predicted loads/fluxes. By default, uses the value specified in
 #'\code{loadReg}. See \code{\link{loadReg}} for a complete list of options.
@@ -64,6 +65,8 @@ predLoad <- function(fit, newdata, load.units=fit$load.units, by="total",
   ## By options and other preliminary code
   if(any(is.na(newdata)))
     stop("newdata contains missing values, remove before prediction")
+  if(nrow(newdata) > 176000L)
+    stop("newdata has too many rows, the size limit is 176000")
   ByOpt <- c("unit", "day", "month", "water year", "calendar year", "total")
   load.units
   seopt <- match.arg(seopt, c("exact", "approximate"))
@@ -222,7 +225,7 @@ predLoad <- function(fit, newdata, load.units=fit$load.units, by="total",
     ## Preserve flow for later
     Flow <- newdata[[flow]]
     if(time.step == "day") {
-      KDate <- as.Date(newdata[[dates]])
+      KDate <- as.Date(as.POSIXlt(newdata[[dates]]))
       KDays <- seq(nrow(model.inp))
       KinAll <- KDays
       ## Exclude NAs and presumably 0 flows
@@ -232,7 +235,7 @@ predLoad <- function(fit, newdata, load.units=fit$load.units, by="total",
     } else {
       Kin <- seq(nrow(model.inp))
       Kin <- Kin[is.finite(rowSums(model.inp))]
-      KDate <- as.Date(newdata[[dates]])
+      KDate <- as.Date(as.POSIXlt(newdata[[dates]]))
       Kdy <- as.integer(KDate)
       KDate <- unique(KDate)
       Kdy <- Kdy - Kdy[1L] + 1L # make relative to first day (Index)

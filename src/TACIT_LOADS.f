@@ -14,7 +14,7 @@
 *
 *     dimensional parameters
 *
-      INCLUDE 'fmodules.inc'
+      INCLUDE 'fmodules.h'
 *
 *     subroutine args
 *

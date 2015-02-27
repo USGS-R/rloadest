@@ -39,7 +39,7 @@
 #'# Produce the full suite of diagnostic plots
 #'plot(app1.lr)
 #'}
-#' @import USGSwsGraphs
+#' @import smwrGraphs
 #' @export
 #' @method plot loadReg
 plot.loadReg <- function(x, which='All', set.up=TRUE, span=1.0, ...) {

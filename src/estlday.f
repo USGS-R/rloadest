@@ -11,7 +11,7 @@
 *     
 *     dimensional parameters and logical devices
 *
-      INCLUDE 'fmodules.inc'
+      INCLUDE 'fmodules.h'
 *
 *     subroutine arguments
 *

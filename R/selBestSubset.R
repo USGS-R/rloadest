@@ -91,11 +91,15 @@ selBestSubset <- function(formula, min.formula=~1, data, subset, na.action, flow
 	m$dist <- "lognormal"
 	k <- if(criterion == "AIC") 2 else log(nrow(df))
 	m <- eval(m)
-	best <- step(m, scope=min.formula, direction="both", trace=0, k=k)
+	## Warn if fewer N than 10*potential params
+	if(m$NOBSC < 10L * (m$NPAR - 1L))
+	  warning("Selected model may be over fit: only ", 
+	          m$NOBSC, " observations for ", m$NPAR, " possible parameters.")
+  best <- step(m, scope=min.formula, direction="both", trace=0, k=k)
 	# retain the step wise model selections
 	model.eval <- best$anova
 	names(model.eval)[[6L]] <- criterion # Fix this to represent what was really done
-	# No build the load model
+	# Now build the load model
 	m <- call
 	m[[1L]] <- as.name("loadReg")
 	m$min.formula <- m$criterion <- NULL

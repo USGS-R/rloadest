@@ -20,10 +20,10 @@
 #'flow column.
 #' @param dates character string indicating the name of the 
 #'date column.
-#' @param flow.units character string describing the flow units.
+#' @param flow.units character string describing the flow units. See \bold{Details}.
 #' @param conc.units character string describing the concentration 
-#'unit.
-#' @param load.units character string describing the load unit.
+#'unit. See \bold{Details}.
+#' @param load.units character string describing the load unit. See \bold{Details}.
 #' @param time.step character string describing the time step of 
 #'the calibration data. Must be one of "instantaneous," "2 hours," "3 hours,"
 #'"4 hours," "6 hours," "12 hours," or "day." The default is "day."
@@ -45,7 +45,7 @@
 #'  station="Illinois River at Marseilles, Ill.")
 #'print(app1.lr)
 #'
-#' @import USGSwsQW
+#' @import smwrQW
 #' @export
 loadReg <- function(formula, data, subset, na.action, flow, dates,
                     flow.units="cfs", conc.units="", load.units="kg", 
@@ -62,6 +62,12 @@ loadReg <- function(formula, data, subset, na.action, flow, dates,
                          "8 hours", "12 hours", "day"))
   call <- match.call()
   m <- match.call(expand.dots = FALSE)
+  Terms <- attr(m, "terms")
+  ## Make sure that the formula is a formula and not a symbol--this
+  # improves output and subsequent formula references
+  if (typeof(call$formula) == "symbol") {
+    call$formula <- formula(Terms)
+  }
   ## remove components not needed for model.frame
   m$flow <- m$dates  <- m$flow.units <- m$conc.units <- NULL
   m$load.units <- m$time.step <- m$station <- NULL
@@ -246,6 +252,11 @@ loadReg <- function(formula, data, subset, na.action, flow, dates,
   lfit$xlevels <- xlevels
   class(lfit) <- "censReg"
   ## Construct the evaluation data frame
+  ## Capture errors
+  if(lfit$IERR > 0L) {
+    lfit$AIC <- lfit$SPPC <- Inf
+    lfit$LLR <- -Inf
+  }
   MEC <- data.frame(model=model.no, AIC=lfit$AIC, SPCC=lfit$SPPC)
   retval <- list(station=station, constituent=ynam, 
                  flow=flow, dates=dates, Qadj=Qadj,
