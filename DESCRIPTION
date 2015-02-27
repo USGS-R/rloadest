@@ -7,7 +7,7 @@ Author: Dave Lorenz, Rob Runkel, Laura De Cicco
 Maintainer: Dave Lorenz <lorenz@usgs.gov>
 Description: Collection of functions to make constituent load estimations
     based on the LOADEST program.
-License: File LICENSE
+License: CC0
 Depends:
     R (>= 3.0.0),
     smwrGraphs,
