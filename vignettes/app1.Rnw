@@ -1,6 +1,6 @@
 \documentclass{article}
 \parskip 3pt
-%\VignetteIndexEntry{Example Application 1}
+%\VignetteIndexEntry{Analysis of an Uncensored Constituent using a Predefined Model}
 %\VignetteDepends{rloadest}
 
 \begin{document}

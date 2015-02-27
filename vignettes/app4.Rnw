@@ -1,6 +1,6 @@
 \documentclass{article}
 \parskip 3pt
-%\VignetteIndexEntry{Example Application 4}
+%\VignetteIndexEntry{Automated Model Selection}
 %\VignetteDepends{rloadest}
 
 \begin{document}

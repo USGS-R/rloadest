@@ -1,6 +1,6 @@
 \documentclass{article}
 \parskip 3pt
-%\VignetteIndexEntry{Example Application 6}
+%\VignetteIndexEntry{Regression Model for Concentration}
 %\VignetteDepends{rloadest}
 
 \begin{document}
