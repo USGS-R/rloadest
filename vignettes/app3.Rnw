@@ -4,7 +4,7 @@
 \usepackage[margin=1.25in]{geometry}
 \usepackage{amsmath}
 
-%\VignetteIndexEntry{Example Application 3}
+%\VignetteIndexEntry{Analysis of an Censored Constituent using a Seasonal Model}
 %\VignetteDepends{rloadest}
 %\VignetteDepends{dataRetrieval}
 

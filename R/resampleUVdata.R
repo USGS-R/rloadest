@@ -16,7 +16,7 @@
 #'default value ("") indicates use the last day in \code{UVdata}.
 #' @param max.diff a character string indicating the maximum difference in time to 
 #'sucessfully resample the unit-value data. The default is "2 hours" see
-#'\code{\link{mergeNearest}} for details.
+#'\code{\link[smwrBase]{mergeNearest}} for details.
 #' @return A data frame like \code{UVdata} but having a uniform time step.
 #' 
 #' @export

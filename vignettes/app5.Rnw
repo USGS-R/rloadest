@@ -1,6 +1,6 @@
 \documentclass{article}
 \parskip 3pt
-%\VignetteIndexEntry{Example Application 5}
+%\VignetteIndexEntry{User-Defined Model with an Additional Variable}
 %\VignetteDepends{rloadest}
 
 \begin{document}
