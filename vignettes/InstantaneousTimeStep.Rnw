@@ -1,0 +1,245 @@
+\documentclass{article}
+\parskip 6pt
+%\VignetteIndexEntry{Instantaneous Time-Step Model}
+%\VignetteDepends{rloadest}
+
+\begin{document}
+\SweaveOpts{concordance=TRUE}
+\raggedright
+
+\title{Instantaneous Time-Step Model}
+
+\author{Dave Lorenz}
+
+\maketitle
+
+This example illustrates how to set up and use a instantaneous time-step model. These models are typically used when there is additional explanatory variable information such as surrogate unit values, like specific conductance. The intent is often to model both the concentration or flux at any time and the load over a period of time.
+
+This example uses data from the Bad River near Odanah, Wisc., USGS gaging station 04027000. The example will build a model of chloride.
+
+
+<<echo=TRUE>>=
+# Load the necessary packages and the data
+library(rloadest)
+library(dataRetrieval)
+# What unit values are available?
+subset(whatNWISdata("04027000", "uv"),
+  select=c("parm_cd", "srsname", "begin_date", "end_date"))
+# Get the QW data
+BadQW <- importNWISqw("04027000", "00940", 
+  begin.date="2011-04-01", end.date="2014-09-30")
+# Merge data and time and set timezone (2 steps)
+BadQW <- transform(BadQW, dateTime=sample_dt + as.timeDay(sample_tm))
+BadQW <- transform(BadQW, dateTime=setTZ(dateTime, tzone_cd))
+# Now the Unit values data
+BadUV <- readNWISuv("04027000", c("00060", "00095", "00300", "63680"),
+  startDate="2011-04-01", endDate="2014-09-30", tz="America/Chicago")
+BadUV <- renameNWISColumns(BadUV)
+names(BadUV)
+# Strip _Inst off column names
+names(BadUV) <- sub("_Inst", "", names(BadUV))
+# Merge the data
+BadData <- mergeNearest(BadQW, "dateTime", right=BadUV, dates.right="dateTime",
+  max.diff="4 hours")
+# Rename the left-hand dateTime column
+names(BadData)[9] <- "dateTime"
+@
+
+\eject
+\section{Build the Instantaneous Time-Step Model}
+
+The first step in building the  model is to determine which of the surrogates are most appropriate to include in the model. There can be many factors that contribute to deciding which explanatory variables to include in the model. From previous experience the user may decide to include or exclude specific surrogates and flow or seasonal terms. For this example, temperature (parameter code 00010) and pH (parameter code 000400) were excluded as they typically have very little influence on nitrate or nitrate concentration. Other factors include the availability of surrogate values. The output in the code below indicates that NTU\_Turb has few observations (more missing values) that Turb, and will not be included in the candidate explanatory variables.
+
+<<echo=TRUE>>=
+# Print the number of missing values in each column
+sapply(BadData, function(col) sum(is.na(col)))
+@
+
+This example will include the other surrogates and flow and seasonal terms in the candidate model. The code below demonstrates the use of \texttt{selBestSubset} to select the initial candidate model.
+
+<<echo=TRUE>>=
+# Create the and print the candidate model.
+BadChloride.lr <- selBestSubset(Chloride ~ log(Flow) + fourier(dateTime) + 
+  log(SpecCond) + log(DO) + log(Turb), data=BadData,
+  flow="Flow", dates="dateTime", time.step="instantaneous", 
+  station="Bad River near Odanah", criterion="SPPC")
+
+print(BadChloride.lr)
+@
+
+Only log(DO) was dropped from the model. The printed report indicates some potential problems with the regression---the PPCC test indicates the residuals are not normally distributed and  several variance inflation factors are relatively large, greater than 10. But the bias diagnostics show very little bias in the comparison of the estimated to observed values.
+
+A few selected graphs will help understand the issues identified in the printed report and suggest an alternative model. Figure 1 shows the residuals versus fitted graph, which indicates some very large residuals at larger fitted values. It also suggests some heteroscedasticity in the residual pattern.
+
+<<echo=TRUE>>=
+# Plot the overall fit, choose plot number 2.
+setSweave("graph01", 6, 6)
+plot(BadChloride.lr, which = 2, set.up=FALSE)
+dev.off()
+@
+\includegraphics{graph01.pdf}
+\paragraph{}
+
+\textbf{Figure 1.} The residuals versus fitted graph.
+
+The S-L plot is not shown. The residual Q-normal graph indicates the reason for the very low p-value indicated by the PPCC test---the large residual values indicated in figure 1 skew the distribution.
+
+<<echo=TRUE>>=
+# Plot the residual Q-normal graph.
+setSweave("graph02", 6, 6)
+plot(BadChloride.lr, which = 5, set.up=FALSE)
+dev.off()
+@
+\includegraphics{graph02.pdf}
+\paragraph{}
+
+\textbf{Figure 2.} The residual Q-normal graph.
+
+A complete review of the partial residual graphs is not included in this example. Only the partial residual for \texttt{log(Turb)} is shown. The graph indicates the lack of fit, especially for the largest values of Turbidity. This suggests that the log transform is not appropriate.
+
+<<echo=TRUE>>=
+# Plot the residual Q-normal graph.
+setSweave("graph03", 6, 6)
+plot(BadChloride.lr, which = "log(Turb)", set.up=FALSE)
+dev.off()
+@
+\includegraphics{graph03.pdf}
+\paragraph{}
+
+\textbf{Figure 3.} The partial residual for \texttt{log(Turb)} graph.
+
+Build the model excluding \texttt{log(DO)} that was dropped in the subset selection procedure and changing \texttt{log(Turb)} to \texttt{Turb}.
+
+<<echo=TRUE>>=
+# Create the and print the revised model.
+BadChloride.lr <- loadReg(Chloride ~ log(Flow) + fourier(dateTime) + 
+  log(SpecCond) + Turb, data=BadData,
+  flow="Flow", dates="dateTime", time.step="instantaneous", 
+  station="Bad River near Odanah")
+
+print(BadChloride.lr, load.only=FALSE)
+@
+
+The report for the revised model indicates less severe problems than from the first candidate model---the p-value for the PPCC test is greater than 0.05, the variance inflation inflation factors are lower although \texttt{log(Flow)} is still greater than 10, and the bias diagnostics from the observed and estimated loads and concentrations are still good.
+
+A review of selected diagnostic plots indicates a much better overall fit. Figure 4 shows the residuals versus fitted graph, which indicates a less severe problem of large residuals at larger fitted values. It also suggests some heteroscedasticity in the residual pattern as with the first candidate model.
+
+
+<<echo=TRUE>>=
+# Plot the overall fit, choose plot number 2.
+setSweave("graph04", 6, 6)
+plot(BadChloride.lr, which = 2, set.up=FALSE)
+dev.off()
+@
+\includegraphics{graph04.pdf}
+\paragraph{}
+
+\textbf{Figure 4.} The residuals versus fitted graph for the revised model.
+
+For this model, the S-L plot is shown. It shows an increase in heteroscedasticity as the fitted values increase. That heteroscedasticity can introduce bias into the estimated values as the bias correction factor will be a bit too small for the larger values and too large for the smaller values. The potential bias for this model is expected to be small because the residual variance is small, 0.03476 natural log units, therefore the bias correction is very small, less than 2 percent, and the potential change to the bias correction very small, much less than 1/2 percent.
+
+<<echo=TRUE>>=
+# Plot the S-L grpah.
+setSweave("graph05", 6, 6)
+plot(BadChloride.lr, which = 3, set.up=FALSE)
+dev.off()
+@
+\includegraphics{graph05.pdf}
+\paragraph{}
+
+\textbf{Figure 5.} The S-L graph for the revised model.
+
+The residual Q-normal graph shows much better agreement to the normal distribution than the original candidate model---the effect of the lowest residuals is much less.
+
+<<echo=TRUE>>=
+# Plot the residual Q-normal graph.
+setSweave("graph06", 6, 6)
+plot(BadChloride.lr, which = 5, set.up=FALSE)
+dev.off()
+@
+\includegraphics{graph06.pdf}
+\paragraph{}
+
+\textbf{Figure 6.} The residual Q-normal graph for the revised model.
+
+
+A complete review of the partial residual graphs is not included in this example. Only the partial residual for \texttt{Turb} is shown to compare to the original model. In this case, the untransformed variable appears to fit reasonably well. 
+
+<<echo=TRUE>>=
+# Plot the residual Q-normal graph.
+setSweave("graph07", 6, 6)
+plot(BadChloride.lr, which = "Turb", set.up=FALSE)
+dev.off()
+@
+\includegraphics{graph07.pdf}
+\paragraph{}
+
+\textbf{Figure 7.} The partial residual for \texttt{Turb} graph for the revised model.
+
+\eject
+\section{Instantaneous Concentrations}
+
+Estimating the instantaneous concentrations or loads from the model is relatively straight forward. The \texttt{predConc} and \texttt{predLoad} functions will estimate concentrations or loads, actually fluxes, for any time, given explanatory variables with no missing values. This example will focus one a single day, June 30, 2014.
+
+
+
+<<echo=TRUE>>=
+# Extract one day from the UV data
+Bad063014 <- subset(BadUV, as.Date(as.POSIXlt(dateTime)) == "2014-06-30")
+# Remove the unecessary surrogates from the data set.
+# This reduces the likelihood of missing values in the dataset
+Bad063014 <- Bad063014[, c("dateTime", "Flow", "SpecCond", "Turb")]
+# Simple check
+any(is.na(Bad063014))
+# Estimate concetrations
+Bad063014.est <- predConc(BadChloride.lr, Bad063014, by="unit")
+# Display the first and last few rows.
+head(Bad063014.est)
+tail(Bad063014.est)
+# The daily mean concentration can also be easily estimated
+predConc(BadChloride.lr, Bad063014, by="day")
+# Compare to the mean of the unit values:
+with(Bad063014.est, mean(Conc))
+@
+
+\eject
+\section{Aggregate Loads}
+
+Estimating concentrations or loads by day assumes, but does not require consistent number of unit values per day. Both \texttt{predLoad} and \texttt{predConc} assume that inconsistent number of unit values per day are due to missing values and return missing values for the estimates for days that do not have the average number of observations per day. Inconsistent number of observations per day can be the result of deleted bad values, maintenance, or a change in frequency of sampling. The data can be resampled to a uniform number per day using the \texttt{resampleUVdata} function or the check can be suppressed by setting the \texttt{allow.incomplete} argument to \texttt{TRUE}.
+
+Estimating loads for periods longer than one day requires consistent number of unit values in each day. The consistent number per day is required to be able to keep track of within-day  and between day variances. The \texttt{resampleUVdata} function can be used to force a consistent number of unit values per day. It is not required for this example, but useful when the unit values are not consistent or when there is a change to or from daylight savings time.
+
+Just as with estimating instantaneous values, missing values are not permitted. Missing values can occur with surrogates due to short-term malfunctions, calibration, or long-term malfunctions. Missing values from short-term malfunctions, generally spikes in the data that are removed during processing, or that occur during calibrations can easily be interpolated using the \texttt{fillMissing} function in \textbf(smwrBase) and are illustrated in this example. Longer-term missing values are much more difficult to fix. They require the careful balancing of need, developing alternate regression models and possible caveats of the interpretation of loads.
+
+<<echo=TRUE>>=
+# Extract one month from the UV data, done in two steps
+Bad0714 <- subset(BadUV, as.Date(as.POSIXlt(dateTime)) >= "2014-07-01")
+Bad0714 <- subset(Bad0714, as.Date(as.POSIXlt(dateTime)) <= "2014-07-31")
+# Remove the unecessary surrogates from the data set.
+# This reduces the likelihood of missing values in the dataset
+Bad0714 <- Bad0714[, c("dateTime", "Flow", "SpecCond", "Turb")]
+# Simple check on each column, how many in each column?
+sapply(Bad0714, function(x) sum(is.na(x)))
+# Fix each column, using the defaults of fillMissing
+Bad0714$SpecCond <- fillMissing(Bad0714$SpecCond)
+Bad0714$Turb <- fillMissing(Bad0714$Turb)
+# Verify filled values
+sapply(Bad0714, function(x) sum(is.na(x)))
+# Estimate daily loads
+Bad0714.day <- predLoad(BadChloride.lr, Bad0714, by="day")
+# Display the first and last few rows.
+head(Bad0714.day)
+tail(Bad0714.day)
+# And the month
+Bad0714.mon <- predLoad(BadChloride.lr, Bad0714, by="month")
+Bad0714.mon
+# Compare to the results using the approximate standard error:
+# For long periods, the processing time to the exact seopt can be very large
+# and may be desireable to use the approximation.
+predLoad(BadChloride.lr, Bad0714, by="month", seopt="app")
+# Compare to the mean of the daily values:
+with(Bad0714.day, mean(Flux))
+@
+
+
+\end{document}

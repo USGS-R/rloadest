@@ -116,7 +116,7 @@ print.loadReg <- function(x, digits=4, brief=TRUE, load.only=brief, ...) {
   else
     pval <- format(round(pval, 4), scientific=5)
   ## Compute the PPCC
-  Res <- residuals(x$lfit, type="working")
+  Res <- residuals(x$lfit, type="working", suppress.na.action=TRUE)
   ppcc <- censPPCC.test(as.lcens(Res, censor.codes=x$lfit$CENSFLAG))
   cat("\n", x$method, " Regression Statistics\n",
       "Residual variance: ", 

@@ -27,17 +27,11 @@
 #'Furhtermore, the model building capability in the rloadest functions make easier
 #'to explore other forms of rating-curve models than LOADEST.
 #'
-#' @name LOADEST-package
+#' @name rloadest-package
 #' @docType package
 #' @author Dave Lorenz \email{lorenz@@usgs.gov}
 #' @keywords load estimation
 NULL
-
-#' Example Atrazine data included in LOADEST package
-#'
-#' Example data representing atrazine
-#'
-#' @name Atrazine
-#' @docType data
-#' @keywords water quality data
-NULL
+.onAttach <- function(libname, pkgname) {
+  packageStartupMessage("Although this software program has been used by the U.S. Geological Survey (USGS), no warranty, expressed or implied, is made by the USGS or the U.S. Government as to the accuracy and functioning of the program and related program material nor shall the fact of distribution constitute any such warranty, and no responsibility is assumed by the USGS in connection therewith.")
+}

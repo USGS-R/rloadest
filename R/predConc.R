@@ -9,7 +9,9 @@
 #' If \code{allow.incomplete} is \code{TRUE}, then concentrations will be 
 #'computed based on all nonmissing values, otherwise missing values
 #'\code{NAs} will be returned. For this application, missing values 
-#'includes \code{NAs} and incomplete days.
+#'includes \code{NAs} and incomplete days. For prediction by "day" when 
+#'there are variable number of unit values per day, \code{allow.incomplete}
+#'must be set to \code{TRUE}.
 #'
 #' The term confidence interval is used here as in the original 
 #'documentation for LOADEST, but the values that are reported are 
@@ -211,6 +213,9 @@ predConc <- function(fit, newdata, by="day",
       Kdy <- as.integer(KDate)
       KDate <- unique(KDate)
       Kdy <- Kdy - Kdy[1L] + 1L # make relative to first day (Index)
+      if(length(unique(table(Kdy))) > 1L && !allow.incomplete) {
+        warning("Variable observations per day, either set the allow.incomplete argument to TRUE or use the resampleUVdata function to construct a uniform series")
+      }
       KinAll <- unique(Kdy)
       ## Make it daily flow, Flow0 indicates a partial 0 flow
       Flow0 <- tapply(Flow, Kdy, min) 

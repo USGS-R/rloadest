@@ -14,7 +14,9 @@
 #'\code{NAs} will be returned. For this application, missing values 
 #'includes \code{NAs} and gaps in the record, except for \code{by} 
 #'set to "total" or user defined groups where missing values only
-#'includes \code{NAs}.
+#'includes \code{NAs}. For prediction by "day" when there are variable
+#'number of unit values per day, \code{allow.incomplete} must be
+#'set to \code{TRUE}.
 #'
 #' The term confidence interval is used here as in the original 
 #'documentation for LOADEST, but the values that are reported are 
@@ -52,7 +54,6 @@
 #' @useDynLib rloadest estlday
 #' @useDynLib rloadest estltot
 #' @export
-
 predLoad <- function(fit, newdata, load.units=fit$load.units, by="total", 
                      seopt="exact", allow.incomplete=FALSE, 
                      conf.int=0.95, print=FALSE) {
@@ -239,6 +240,9 @@ predLoad <- function(fit, newdata, load.units=fit$load.units, by="total",
       Kdy <- as.integer(KDate)
       KDate <- unique(KDate)
       Kdy <- Kdy - Kdy[1L] + 1L # make relative to first day (Index)
+      if(length(unique(table(Kdy))) > 1L && !allow.incomplete) {
+        warning("Variable observations per day, either set the allow.incomplete argument to TRUE or use the resampleUVdata function to construct a uniform series")
+      }
       KinAll <- unique(Kdy)
       ## Make it daily flow, Flow0 indicates a partial 0 flow
       Flow0 <- tapply(Flow, Kdy, min) 
@@ -470,14 +474,19 @@ predLoad <- function(fit, newdata, load.units=fit$load.units, by="total",
     cat("Streamflow Summary Statistics\n",
         "-------------------------------------------\n\n", sep="")
     Qsum <- rbind(Cal.=fit$Sum.flow, Est.=summary(Flow))
-    if(diff(range(Qsum[, ncol(Qsum)])) > 0)
+    if(Qsum[2L, ncol(Qsum)] > Qsum[1L, ncol(Qsum)]) {
       cat("WARNING: The maximum estimation data set steamflow exceeds the maximum\n",
           "calibration data set streamflow. Load estimates require extrapolation.\n\n",
           sep="")
-    else
+    } else if(Qsum[2L, 1L] < Qsum[1L, 1L]) {
+	   cat("WARNING: The minimum estimation data set steamflow exceeds the minimum\n",
+          "calibration data set streamflow. Load estimates require extrapolation.\n\n",
+          sep="")
+	} else {
       cat("The maximum estimation data set streamflow does not exceed the maximum\n",
           "calibration data set streamflow. No extrapolation is required.\n\n",
           sep="")
+	}
     if(!(by %in% c("day", "unit"))) {
       cat("\n-------------------------------------------------------------\n",
           "Constituent Output File Part IIb: Estimation (Load Estimates)\n",

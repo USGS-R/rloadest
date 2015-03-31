@@ -1,12 +1,11 @@
 \documentclass{article}
-\parskip 3pt
+\parskip 6pt
 %\VignetteIndexEntry{Regression Model for Concentration}
 %\VignetteDepends{rloadest}
 
 \begin{document}
 \SweaveOpts{concordance=TRUE}
 \raggedright
-\parindent 30 pt
 
 \title{Application 6: Regression Model for Concentration}
 
