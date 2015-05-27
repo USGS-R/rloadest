@@ -14,6 +14,13 @@ This software is provided "AS IS."
 Installation
 ----------
 
-    install.packages(c("rloadest"), 
-    repos=c("http://usgs-r.github.com","http://cran.us.r-project.org"), 
-    dependencies=TRUE)
+```r
+install.packages("rloadest", repos="http://owi.usgs.gov/R")
+```
+
+Alternatively, add the owi repository to your R profile, and get automatic updates:
+
+```r
+source("http://owi.usgs.gov/R/add_gran_repo.R")
+install.packages("rloadest")
+```
