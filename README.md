@@ -14,12 +14,13 @@ This software is provided "AS IS."
 Installation
 ----------
 
-```R
-install.packages("rloadest", 
-    repos=c("http://owi.usgs.gov/R",
-    "http://cran.us.r-project.org"), 
-    dependencies = TRUE)
+```r
+install.packages("rloadest", repos="http://owi.usgs.gov/R")
 ```
 
-Linux: [![travis](https://travis-ci.org/USGS-R/rloadest.svg?branch=master)](https://travis-ci.org/USGS-R/rloadest)
+Alternatively, add the owi repository to your R profile, and get automatic updates:
 
+```r
+source("http://owi.usgs.gov/R/add_gran_repo.R")
+install.packages("rloadest")
+```
