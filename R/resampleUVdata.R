@@ -17,12 +17,16 @@
 #' @param max.diff a character string indicating the maximum difference in time to 
 #'sucessfully resample the unit-value data. The default is "2 hours" see
 #'\code{\link[smwrBase]{mergeNearest}} for details.
+#' @param missing.days a characer string indicating what action should be taken for days
+#'not present in \code{UVdata}. Must be either "exclude" to remove those days from the output,
+#'or "include" to retain them. Can be abbreviated. If \code{missing.days} is "include,"
+#'then partial days within \code{max.diff} will be included in the output data frame.
 #' @return A data frame like \code{UVdata} but having a uniform time step.
 #' 
 #' @export
 resampleUVdata <- function(UVdata, time.step=15, start.date="", end.date="",
-													 max.diff="2 hours") {
-	# Verify that one column of class POSIXt is in UVdata
+													 max.diff="2 hours", missing.days="exclude") {
+	# Verify that one column of class POSIXt is in UVdata, and other checks
 	DateTime <- names(UVdata)[sapply(UVdata, function(x) inherits(x, "POSIXt"))]
 	if(length(DateTime) > 1L)
 		stop("Multiple datetime columns in UVdata")
@@ -31,8 +35,9 @@ resampleUVdata <- function(UVdata, time.step=15, start.date="", end.date="",
 	# Verify that time step divides an hour
 	if((60 %% time.step) != 0)
 		stop("Invalid time step: ", as.character(time.step))
+	missing.days <- match.arg(missing.days, c("exclude", "include"))
 	# OK make a difftime and get timezone info
-	ts.dt <- as.difftime(time.step, unit="mins")
+	ts.dt <- as.difftime(time.step, units="mins")
 	tz <- attr(UVdata[[DateTime]], "tzone")
 	# Set start/end times; requires lubridate
 	if(start.date == "") {
@@ -47,6 +52,10 @@ resampleUVdata <- function(UVdata, time.step=15, start.date="", end.date="",
 	}
 	end.date <- end.date - ts.dt
 	## OK, we are ready to go.
+  # If necessary retain only days on UVdata
+  if(missing.days == "exclude") {
+    days <- unique(as.Date(as.POSIXlt(UVdata[[DateTime]])))
+  }
 	# Create the target sequence, force that same number of observations per day
 	targseq <- seq(start.date, end.date, by=ts.dt)
 	targdts <- as.Date(as.POSIXlt(targseq))
@@ -68,5 +77,9 @@ resampleUVdata <- function(UVdata, time.step=15, start.date="", end.date="",
 	retval <- mergeNearest(retval, DateTime, right=UVdata, dates.right=DateTime,
 												 max.diff=max.diff)
 	names(retval)[1L] <- DateTime
+  # Remove missing days if requested
+	if(missing.days == "exclude") {
+    retval <- retval[as.Date(as.POSIXlt(retval[[1L]])) %in% days, ]
+	}
 	return(retval)
 }

@@ -1,0 +1,116 @@
+\documentclass{article}
+\parskip 6pt
+%\VignetteIndexEntry{Regression Model for Concentration}
+%\VignetteDepends{rloadest}
+
+\begin{document}
+\SweaveOpts{concordance=TRUE}
+\raggedright
+
+\title{Application 6: Regression Model for Concentration}
+
+\author{Dave Lorenz}
+
+\maketitle
+
+This example illustrates how to use the regression model to estimate concentration rather than load. Concentrations can be estimated for daily or shorter time frames directly from the load regression output. Time-weighted mean concentrations for longer time periods can be computed using the method described for application 6 in Runkel and others (2004), or simply computing the mean daily if confidence intervals are not needed. Flow-weighted mean concentrations can be computed by estimating the flux for each period of time, dividing by the mean flow and dividing by the correct conversion factor; the confidence interval can be computed in the same manner.
+
+This example uses the second revised model from example application 5. The user is directed to that example vignette for details on constructing that model. Part 2 illustrates how to estimate time-weighted mean (TWM) monthly concentrations. Part 3 illustrates how to estimate flow-weighted mean (FWM) concentrations.
+
+
+<<echo=TRUE>>=
+# Load the rloadest package and the data
+library(rloadest)
+data(app5.calib)
+head(app5.calib)
+@
+
+\eject
+\section{Predict Daily Concentrations for 1999}
+
+The concentration  model is computed using \texttt{loadReg}. The default print does not print the concentration model, but it can be printed by setting \texttt{load.only} to \texttt{FALSE}.
+
+<<echo=TRUE>>=
+# Create the and print load model with concentration.
+app6.lr <- loadReg(Alkalinity ~ quadratic(log(FLOW)) + log(SC) +
+                       fourier(DATES),
+                     data = app5.calib, subset=DATES < "1998-01-01",
+                     flow = "FLOW", dates = "DATES", conc.units="mg/L",
+                     station="Arkansas River at Halstead, Ks.")
+print(app6.lr, load.only=FALSE)
+@
+
+The \texttt{rloadest} package contains the function \texttt{predConc} that will estimate concentrations for daily or shorter time periods, depending on the time step. Note that the daily estimation data set, \texttt{app5.est}, has 7 missing days and so has only 358 observations instead of 365 for 1999.
+
+<<echo=TRUE>>=
+# Get the estimation data
+data(app5.est)
+# Predict daily concentrations
+app6.cd <- predConc(app6.lr, app5.est, by="day") 
+head(app6.cd)
+@
+
+\eject
+\section{Part 2 Predict Monthly Time-weighted Mean Concentrations for 1999}
+
+The estimation of TWM concentrations requires the user to "trick" the regression model by substituting a constant synthetic value for the flow column that actually estimates concentrations in stead of load when using the \texttt{predLoad} function. The details of the development of the method are described in Runkel and others (2004). This example application only describes the implementation using \texttt{rloadest} functions.
+
+The first step is to create a synthetic flow column in both the calibration and the estimation data sets. The value of the data is the conversion factor from load to concentration, or the reciprocal of the conversion factor from concentration to loads that can be gotten by using the \texttt{c2load} function. 
+
+
+<<echo=TRUE>>=
+# Create synthetic flow values 
+app6.calib <- transform(app5.calib, Sflow=1/c2load(1, 1, 
+   conc.units="mg/L"))
+app6.est <- transform(app5.est, Sflow=1/c2load(1, 1, 
+   conc.units="mg/L"))
+head(app6.calib)
+@
+
+The next step is to construct the calibrated model. This example will use the previously calibrated model, so that diagnostics plots will not be created. The only difference between this model and the previous model is that the flow column is defined as the synthetic flow column. The printed report for this load model should agree with the printed report for the concentration model in the previous section.
+
+<<echo=TRUE>>=
+# Create the and print load model.
+app6.lrTWM <- loadReg(Alkalinity ~ quadratic(log(FLOW)) + log(SC) +
+                       fourier(DATES),
+                     data = app6.calib, subset=DATES < "1998-01-01",
+                     flow = "Sflow", dates = "DATES", conc.units="mg/L",
+                     station="Arkansas River at Halstead, Ks.")
+print(app6.lrTWM)
+@
+
+The user can now estimate TWM concentrations for periods longer than 1 day. Remember that the estimation dataset has 7 missing days and no estimates for those months will be made.
+
+<<echo=TRUE>>=
+# Predict monthly TWM concentrations using the \textt{predLoad} function.
+app6.TWM <- predLoad(app6.lrTWM, app6.est, by="month") 
+# Change the name of the Flux column to Conc
+names(app6.TWM)[3] <- "Conc"
+app6.TWM
+@
+
+A quick check of the mean daily concentrations verifies that computations. Note that there is no protection against incomplete months when the TWM concentrations are computed manually, so values are obtained for June, July and September.
+
+<<echo=TRUE>>=
+with(app6.cd, tapply(Conc, month(Date, label=TRUE), mean))
+@
+
+\eject
+\section{Part 3 Predict Monthly Flow-weighted Mean Concentrations for 1999}
+
+The estimation of FWM concentrations is a two-step process. The first step is to build the rating-curve model for loads and estimate the flux desired for each period. The second step is to compute the mean flow for each period and divide the flux by the flow and correct to concentration units. The load model for this example (app6.lr) was created in the first part of this vignette.
+
+
+<<echo=TRUE>>=
+# Compute the monthly fluxes. 
+app6.FWM <- predLoad(app6.lr, app6.est, by="month")
+# Compute the mean flows
+app6.FWM$Flow <- as.vector(with(app6.est, tapply(FLOW, month(DATES), mean)))
+# Compute the FWM concentration
+app6.FWM <- transform(app6.FWM, FWMC=Flux/Flow/
+                        c2load(1, 1, conc.units="mg/L"))
+app6.FWM
+@
+
+For these data, the FWM concentration is less than the TWM concentration. In general, the FWM concentration will less than the TWM concentration when the concentration and flow are negatively correlated.
+\end{document}

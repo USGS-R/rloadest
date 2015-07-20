@@ -1,0 +1,183 @@
+\documentclass{article}
+\parskip 6pt
+%\VignetteIndexEntry{Incorporating Hysteresis}
+%\VignetteDepends{rloadest}
+
+\begin{document}
+\SweaveOpts{concordance=TRUE}
+\raggedright
+
+\title{Incorporating Hysteresis in a Load Model}
+
+\author{Dave Lorenz}
+
+\maketitle
+
+This example illustrates how to set up and incorporate hysteresis into a load model. Hysteresis occurs when concentrations (and thereby loads) are different on rising and falling limbs of an event hydrograph for the same magnitude of streamflow.
+
+This example extends the analysis of Garrett (2012) of nitrate plus nitrite loads in the Boyer River at Logan, Iowa, USGS gaging station 06609500. The original time frame for the analysis was for water years 2004 through 2008. This example extends the analysis through water year 2012. Loads will not be estimated from this model---it demonstrates only the building and evaluation phases.
+
+
+<<echo=TRUE>>=
+# Load the necessary packages and the data
+library(rloadest)
+library(dataRetrieval)
+# Get the QW data
+Boyer <- "06609500"
+BoyerQW <- importNWISqw(Boyer, "00631", 
+  begin.date="2003-10-01", end.date="2012-09-30")
+# Now the Daily values data
+BoyerQ <- readNWISdv(Boyer, "00060", startDate="2003-10-01", 
+  endDate="2012-09-30")
+BoyerQ <- renameNWISColumns(BoyerQ)
+@
+
+\eject
+\section{Compute the Hysteresis Variables and Merge the Data}
+
+There is no direct diagnostic test to determine if hysteresis is important. The best way to assess any hysteresis is to compute the hysteresis metric and plot residuals against that metric. The first section of code will replicate that effort, beginning with the ''best'' predefined model rather than simply replicating the model used by Garrett (2012). Garrett used a 1-day lag. This example will use that and add a 3-day lag metric. The function that computes the metric is \texttt{hysteresis} in \textbf{smwrBase}.
+
+<<echo=TRUE>>=
+# Compute the hysteresis metrics.
+BoyerQ <- transform(BoyerQ,
+  dQ1 = hysteresis(log(Flow), 1),
+  dQ3 = hysteresis(log(Flow), 3))
+# Rename the date column in QW so that the data can be merged
+names(BoyerQW)[2] <- "Date"
+# Merge the data
+BoyerData <- mergeQ(BoyerQW, FLOW=c("Flow", "dQ1", "dQ3"), 
+  DATES="Date", Qdata=BoyerQ, Plot=F)
+# Create the initial model
+Boyer.lr <- selBestModel("NO2PlusNO3.N", BoyerData,
+  flow="Flow", dates="Date", station=Boyer)
+print(Boyer.lr)
+@
+
+The model selected was number 9, which includes second-order flow and time terms and the first-order seasonal terms. Reviewing the table of model evaluation criteria, model number 2 had a very small value for AIC and the second smallest for SPPC. Model number 2 would have been the equivalent starting model in Garrett (2012), including only the second-order flow terms. The printed results indicate good bias statistics, but the PPCC p-value is much less than 0.05. The next section of code illustrates plotting the residuals and hysteresis metrics. The 1-day lag appears to fit better than the 3-day lag.
+
+<<echo=TRUE>>=
+# residuals and hysteresis
+setSweave("graph01", 6, 8)
+AA.lo <- setLayout(num.rows=2)
+setGraph(1, AA.lo)
+AA.pl <- xyPlot(BoyerData$dQ1, residuals(Boyer.lr),
+  ytitle="Residuals", xtitle="1-day lag hysteresis",
+  xaxis.range=c(-1,3))
+addSLR(AA.pl)
+setGraph(2, AA.lo)
+AA.pl <- xyPlot(BoyerData$dQ3, residuals(Boyer.lr),
+  ytitle="Residuals", xtitle="3-day lag hysteresis",
+  xaxis.range=c(-1,3))
+addSLR(AA.pl)
+dev.off()
+@
+\includegraphics{graph01.pdf}
+\paragraph{}
+
+\textbf{Figure 1.} The residuals versus hysteresis metrics.
+
+\eject
+\section{Construct and Validate the Hysteresis Model}
+
+The model...
+
+
+<<echo=TRUE>>=
+# Construct the model
+Boyer.lr <- loadReg(NO2PlusNO3.N ~ quadratic(log(Flow)) +
+  quadratic(dectime(Date)) + fourier(Date) + dQ1, data=BoyerData,
+  flow="Flow", dates="Date", station=Boyer)
+print(Boyer.lr)
+@
+
+The printed output shows an improved model, but the PPCC test still indicates lack of normality. A review of the linearity of the explanatory variables indicates the need for second-order seasonal terms (figure 1). The sine term is also nonlinear, but not shown. The second order linear time term will be dropped because it is not significant at the 0.05 level.
+
+<<echo=TRUE>>=
+# Plot the overall fit, choose "fourier(Date)cos(k=1)"
+setSweave("graph02", 6, 6)
+plot(Boyer.lr, which="fourier(Date)cos(k=1)", set.up=FALSE)
+dev.off()
+@
+\includegraphics{graph02.pdf}
+\paragraph{}
+
+\textbf{Figure 2.} The diagnostic plot for the linearity of a seasonal term.
+
+Construct the revised model that drops the second order time term and adds the second order seasonal terms. The diagnostic plots follow.
+
+<<echo=TRUE>>=
+# Construct the revised model
+Boyer.lr <- loadReg(NO2PlusNO3.N ~ quadratic(log(Flow)) +
+  dectime(Date) + fourier(Date, 2) + dQ1, data=BoyerData,
+  flow="Flow", dates="Date", station=Boyer)
+print(Boyer.lr)
+@
+
+A complete review of the partial residual graphs is not included in this example. Only the partial residual for \texttt{fourier(Date)cos(k=1)} is shown to show that the linearity has improved. No partial residual plot indicates a serious lack of linearity.
+
+<<echo=TRUE>>=
+# Plot the residual Q-normal graph.
+setSweave("graph03", 6, 6)
+plot(Boyer.lr, which = "fourier(Date, 2)cos(k=1)", set.up=FALSE)
+dev.off()
+@
+\includegraphics{graph03.pdf}
+\paragraph{}
+
+\textbf{Figure 3.} The partial residual for \texttt{fourier(Date, 2)cos(k=1)} graph.
+
+The correlogram indicates a much better seasonal fit and no long-term lack of fit.
+
+<<echo=TRUE>>=
+# Plot the overall fit, choose plot number 2.
+setSweave("graph04", 6, 6)
+plot(Boyer.lr, which = 4, set.up=FALSE)
+dev.off()
+@
+\includegraphics{graph04.pdf}
+\paragraph{}
+
+\textbf{Figure 4.} The correlogram for the revised model.
+
+For this model, the S-L plot is shown. It shows a slight decrease in heteroscedasticity as the fitted values increase. The decrease is small and likely drive by the 3 largest fitted values and there is very little visual decrease in scatter as the fitted values increase.
+
+<<echo=TRUE>>=
+# Plot the S-L grpah.
+setSweave("graph05", 6, 6)
+plot(Boyer.lr, which = 3, set.up=FALSE)
+dev.off()
+@
+\includegraphics{graph05.pdf}
+\paragraph{}
+
+\textbf{Figure 5.} The S-L graph for the revised model.
+
+The Q-normal graph shows a non-normal distribution, but without distinctive skewness or kurtosis.
+
+<<echo=TRUE>>=
+# Plot the residual Q-normal graph.
+setSweave("graph06", 6, 6)
+plot(Boyer.lr, which = 5, set.up=FALSE)
+dev.off()
+@
+\includegraphics{graph06.pdf}
+\paragraph{}
+
+\textbf{Figure 6.} The residual Q-normal graph.
+
+The non-normality of the residuals poses at least three potential problems: (1) lack of confidence in the confidence limits for regression parameter estimates, (2) bias in the back-transformation corrections for the mean load, and (3) lack of confidence in the confidence intervals of the load estimate. For the first potential problem, the confidence intervals of the parameter estimates and their significance are not critical to load estimation and the non-normality is not so large that this is a major concern (Greene, 2012). Several factors must be considered to address the second potential problem---the magnitude of the bias correction and the measured bias. The actual bias correction factor (BCF) used is AMLE, which cannot be directly computed, but can be estimated by using the MLE BCF. The MLE BCF for this model is \texttt{exp(0.06958/2) = 1.0354}. For non-normal data, Duan's smoothing BCF is often used (Helsel and Hirsch, 2002); the value for that BCF is \texttt{mean(exp(residuals(Boyer.lr))) = 1.0302}. The BCFs are very similar, which suggests that the bias from the back transform could be small. That is confirmed by the very small value for the percent bias in the printed report (0.2405). The third potential problem and no way to address it other than by using bootstrapping methods. Any reported confidence intervals on loads or fluxes should be treated as approximate.
+
+\begin{thebibliography}{9}
+
+\bibitem{JG}
+Garrett, J.D., 2012, Concentrations, loads, and yields of select constituents from major tributaries of the Mississippi and Missouri Rivers in Iowa, water years 2004???2008: U.S. Geological Survey Scientific Investigations Report 2012???-5240, 61 p.
+
+\bibitem{WG}
+Greene, W.H., 2012, Econometric analysis, seventh edition: Upper Saddle River, New. Jersey, Prentice Hall, 1198 p.
+
+\bibitem{HH}
+Helsel, D.R., and Hirsch, R.M., 2002, Statistical methods in water resources: U.S. Geological Survey Techniques of Water-Resources Investigations, book 4, chap. A3, 522 p.
+
+\end{thebibliography}
+
+\end{document}

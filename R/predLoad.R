@@ -64,8 +64,6 @@ predLoad <- function(fit, newdata, load.units=fit$load.units, by="total",
   ##    2014Sep23 DLLorenz Missing check on newdata
   ##
   ## By options and other preliminary code
-  if(any(is.na(newdata)))
-    stop("newdata contains missing values, remove before prediction")
   if(nrow(newdata) > 176000L)
     stop("newdata has too many rows, the size limit is 176000")
   ByOpt <- c("unit", "day", "month", "water year", "calendar year", "total")
@@ -106,12 +104,9 @@ predLoad <- function(fit, newdata, load.units=fit$load.units, by="total",
     newdata <- aggregate(newdata, list(time.step=gps), mean)
     attr(newdata[[dates]], "tzone") <- ntz
   } else { # Must be instantaneous
-    gps <- format(newdata[[dates]])
-    difdays <- range(newdata[[dates]])
-    difdays <- difftime(ceiling_date(difdays[2L], unit="day"), 
-                        floor_date(difdays[1L], unit="day"),
-                        units="days")
-    gps.nday <- round(nrow(newdata)/as.numeric(difdays), 6L) # should get to near integer
+    gps <- format(newdata[[dates]], format="%Y-%m-%d")
+    numdays <- length(unique(gps)) # the number of days in the datset
+    gps.nday <- round(nrow(newdata)/as.numeric(numdays), 6L) # should get to near integer
     if((gps.nday %% 1) != 0 && !(by %in% c("unit", "day")))
       stop("newdata must have the same number of observations each day")
     gps.nday <- as.integer(gps.nday)
@@ -124,6 +119,8 @@ predLoad <- function(fit, newdata, load.units=fit$load.units, by="total",
   } else {
     model.inp <- setXLDat(newdata, flow, dates, Qadj, Tadj, model.no)
   }
+  if(any(is.na(model.inp)))
+    stop("Prediction data contains missing values, remove before prediction")
   ## Construct the structure for aggregating the data
   ## Deal with byn == 0 directly in the last estimation section
   checkDays <- list() # Create empty list for day checking

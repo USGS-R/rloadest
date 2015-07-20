@@ -1,0 +1,163 @@
+\documentclass{article}
+\parskip 6pt
+%\VignetteIndexEntry{Using EGRET Data}
+%\VignetteDepends{rloadest}
+%\VignetteDepends{EGRET}
+%\VignetteDepends{survival}
+
+\begin{document}
+\SweaveOpts{concordance=TRUE}
+\raggedright
+
+\title{Using EGRET Data in a rloadest Model}
+
+\author{Dave Lorenz}
+
+\maketitle
+
+This example illustrates how to set up and use data retrieved and processed for an EGRET (Hirsch and De Cicco, 2015) in a rloadest load model. EGRET includes the statistical algorithm Weighted Regressions on Time, Discharge, and Season (WRTDS) that can compute loads and concentrations. WRTDS uses locally weighted regression on linear time, linear flow (discharge), and the first-order sine and cosine terms to model constituent concentrations and fluxes over time and through the range for flow. 
+
+This example uses the processed data supplied in the EGRET package, but any data retrieved and processed by the \textit{readNWISDaily}, \textit{readNWISSample}, \textit{readNWISInfo} and \textit{mergeReport} functions in EGRET can be used. The sullied data are nitrate plus nitrite data collected in the Choptank River near Greensboro, Maryland (USGS site identifier 01491000).
+ 
+
+<<echo=TRUE>>=
+# Load the necessary packages and the data
+library(survival) # required for Surv
+library(rloadest)
+library(EGRET)
+# Get the QW and daily flow data
+Chop.QW <- Choptank_eList$Sample
+Chop.Q <- Choptank_eList$Daily
+@
+
+\eject
+\section{Compute the Initial rloadest Model}
+
+The 7-parameter model (model number 9) is a typical model for relatively long-term records, longer than about 7 years and can be a good starting point for building a good model. The water-quality data in the Sample dataset for EGRET is stored in four columns---the minimum value, maximum value, an indicator of censoring, and the average value. That format can be converted to a valid response variable for \textit{loadReg} using either \textit{as.mcens} or \textit{Surv}; \textit{Surv} is preferred because if the data are uncensored or left-censored, then the ''AMLE'' method is used rather that the ''MLE'' method, 
+which is always used with a response variable of class ''mcens.''
+
+<<echo=TRUE>>=
+# Compute the 7-parameter model.
+Chop.lr <- loadReg(Surv(ConcLow, ConcHigh, type="interval2") ~ model(9),
+  data=Chop.QW, flow="Q", dates="Date", conc.units="mg/L",
+  flow.units="cms", station="Choptank")
+@
+
+One of the first steps in assessing the fit is to look at the diagnostic plots for the linearity of the overall fit and each explanatory variable. The overall fit (figure 1) looks linear, but there are three low outliers and a tendency to larger scatter at larger predicted values
+
+<<echo=TRUE>>=
+# Plot the overall fit
+setSweave("graph01", 6, 6)
+plot(Chop.lr, which=1, set.up=FALSE)
+dev.off()
+@
+\includegraphics{graph01.pdf}
+\paragraph{}
+
+\textbf{Figure 1.} The overall fit.
+
+The linearity of the explanatory variables is shown in figure 2. The partial residual plots for flow (lnQ and lnQ2) show nonlinearity in the second order (lnQ2). The partial residual plots for time (DECTIME and DECTIME2) show no nonlinearity, but the second-order term (DECTIME2) shows no trend and can therefore be removed from the model. The partial residual plots for seasonality (DECTIME and DECTIME2) show nonlinearity in both terms, suggesting the need for higher order seasonal terms.
+<<echo=TRUE>>=
+# Plot the explanatory variable fits
+setSweave("graph02", 6, 9)
+AA.lo <- setLayout(num.rows=3, num.cols=2)
+# Flow and flow squared
+setGraph(1, AA.lo)
+plot(Chop.lr, which="lnQ", set.up=FALSE)
+setGraph(2, AA.lo)
+plot(Chop.lr, which="lnQ2", set.up=FALSE)
+# Time and time squared
+setGraph(3, AA.lo)
+plot(Chop.lr, which="DECTIME", set.up=FALSE)
+setGraph(4, AA.lo)
+plot(Chop.lr, which="DECTIME2", set.up=FALSE)
+# Seasonality
+setGraph(5, AA.lo)
+plot(Chop.lr, which="sin.DECTIME", set.up=FALSE)
+setGraph(6, AA.lo)
+plot(Chop.lr, which="cos.DECTIME", set.up=FALSE)
+dev.off()
+@
+\includegraphics{graph02.pdf}
+\paragraph{}
+
+\textbf{Figure 2.} The linearity of the explanatory variables.
+
+Figure 3 shows the relation between concentration and flow. The relation is not quadratic, but it appears that there is a distinct change at about 10 cubic meters per second. That relation can be modeled using piecewise linear, or segmented, terms. 
+
+<<echo=TRUE>>=
+# Plot tconcentration and flow
+setSweave("graph03", 6, 6)
+# Use the average concentration (only one censored value)
+with(Chop.QW, xyPlot(Q, ConcAve, yaxis.log=TRUE, xaxis.log=TRUE))
+dev.off()
+@
+\includegraphics{graph03.pdf}
+\paragraph{}
+
+\textbf{Figure 3.} The relation between concentration and flow.
+
+\eject
+\section{Construct the Modified rloadest Model}
+
+The \textit{segLoadReg} can be used to build a piecewise linear model. It relies on the segmented package, which cannot model censored data to identify the breakpoints. For the first step censored values will be approximated by simple substitution; for the final model, the censored values are restored. One other quirk of \textit{segLoadReg} is that the response term must be a variable, it cannot be constructed using \textit{Surv} or any other function. Therefore, the breakpoint for this model will be identified using ConcAve, but the final model will be built using the censoring information.
+
+<<echo=TRUE>>=
+# Compute the breakpoint--the seg term must be the first term on 
+# the right-hand side.
+Chop.lr <- segLoadReg(ConcAve ~ seg(LogQ, 1) + DecYear + 
+    fourier(DecYear, 2),
+  data=Chop.QW, flow="Q", dates="Date", conc.units="mg/L",
+  flow.units="cms", station="Choptank")
+# From the printed output, the breakpoint is 1.994 in natural log units, 
+# about 7.4 cms
+# Compute and print the final model
+Chop.lr <- loadReg(Surv(ConcLow, ConcHigh, type="interval2") ~ 
+    segment(LogQ, 1.994) + DecYear + fourier(DecYear, 2),
+  data=Chop.QW, flow="Q", dates="Date", conc.units="mg/L",
+  flow.units="cms", station="Choptank")
+print(Chop.lr)
+@
+
+This segmented model has three variables--- with names ending in X, U1, and P1. The coefficient for the variable ending in X is the slope for the variable less that the breakpoint, the coefficient for the variable ending in U1 is the change in slope above the breakpoint, and the coefficient for the variable ending in P1 should always be close to 0.
+
+No partial residual plot indicates any nonlinearity. Figure 4 shows 5 selected partial residual plots.
+
+<<echo=TRUE>>=
+# Plot the explanatory variable fits
+setSweave("graph04", 6, 9)
+AA.lo <- setLayout(num.rows=3, num.cols=2)
+# Segmented flow
+setGraph(1, AA.lo)
+plot(Chop.lr, which="segment(LogQ, 1.994)X", set.up=FALSE)
+setGraph(2, AA.lo)
+plot(Chop.lr, which="segment(LogQ, 1.994)U1", set.up=FALSE)
+# Time 
+setGraph(3, AA.lo)
+plot(Chop.lr, which="DecYear", set.up=FALSE)
+# Seasonality
+setGraph(5, AA.lo)
+plot(Chop.lr, which="fourier(DecYear, 2)sin(k=2)", set.up=FALSE)
+setGraph(6, AA.lo)
+plot(Chop.lr, which="fourier(DecYear, 2)cos(k=2)", set.up=FALSE)
+dev.off()
+@
+\includegraphics{graph04.pdf}
+\paragraph{}
+
+\textbf{Figure 4.} partial residual plots.
+
+\eject
+\section{Further Considerations}
+
+To be continued.
+
+
+\begin{thebibliography}{9}
+
+\bibitem{HD}
+Hirsch, R.M. and De Cicco, L.A., 2015, User guide to Exploration and Graphics for RivEr Trends (EGRET) and dataRetrieval R for hydrologic data (version 2.0, February 2015): U.S. Geological Survey Techniques and Methods book 4, chap A10, 93 p. Available at http://dx.doi.org/10.3133/tm4A10.
+
+\end{thebibliography}
+
+\end{document}

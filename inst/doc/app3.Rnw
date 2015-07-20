@@ -1,0 +1,313 @@
+\documentclass{article}
+\parskip 3pt
+\parindent 30pt
+\usepackage[margin=1.25in]{geometry}
+\usepackage{amsmath}
+
+%\VignetteIndexEntry{Analysis of an Censored Constituent using a Seasonal Model}
+%\VignetteDepends{rloadest}
+%\VignetteDepends{dataRetrieval}
+
+\begin{document}
+\SweaveOpts{concordance=TRUE}
+\raggedright
+\parindent 30 pt
+
+\title{Application 3: Analysis of an Censored Constituent using a Seasonal Model}
+
+\author{Dave Lorenz}
+
+\maketitle
+
+This application illustrates the "7-parameter model," a predefined model that has been shown to perform well for loading analyses of constituents in large (> 100 square miles) watersheds (Cohn and others, 1992). In addition, the application illustrates the use of LOADEST when portions of the calibration data set are subject to censoring.
+
+As in the previous example, a constituent with a seasonal loading pattern is considered here. In this case, constituent concentrations are assumed to vary in a continuous manner, as opposed to the abrupt changes considered in Application 2.  Several of the predefined models (models 4 and 6--9; Section 3.2.2, table 7) use a first-order Fourier series (sine and cosine terms) to consider seasonality. In this application, the 7-parameter model (model 9) is developed for nutrient loading on the Potomac River. The 7-parameter model is given by:
+\begin{equation}
+\log(Load_i)=\alpha_0+\alpha_1{lnQ_i}+\alpha_2{lnQ_i^2}+\alpha_3{cT_i}+\alpha_4{cT_i^2}+\alpha_5 \sin(2\pi{dT_i})+\alpha_6 \cos(2\pi{dT_i})+\epsilon_i,
+\end{equation}
+where $lnQ_i$ is the centered log of flow, $cT_i$ is centered decimal time, and $dT_i$ is the decimal time for observation $i$. Within the model, explanatory variables one and two account for the dependence on flow, explanatory variables three and four account for the time trend, and explanatory variables five and six are a first-order Fourier series to account for seasonal variability.
+
+The load regression model for orthophosphate data collected near USGS gaging station 01646580 on the Potomac River uses equation 1. The retrieved dataset includes 237 observations of concentrations collected from 2002 to 2010; many of the observations are below the laboratory detection limit, resulting in a censored data set. The flow data will be from USGS gaging station 01646502, located just upstream from the water-quality gage.
+
+\eject
+\section{Retrieve and Build the Datasets}
+
+Instead of relying on a packaged dataset, this example will retrieve data from NWISweb. You must be connected to the Internet in order to replicate the results in this example.
+
+The first step is to retrieve the water-quality and flow data. The water-quality data are retrieved using the \texttt{importNWISqw} function, which requires the station identifier and the parameter code. It also accepts beginning and ending dates. The flow data are retrieved using the \texttt{readNWIS} function, which requires only the station identifier and also accepts beginning and ending dates as well as other arguments not used. The \texttt{renCol} function simply renames the flow column so that it is more readable by humans.
+
+<<echo=TRUE>>=
+# Load the rloadest package, which requires the USGSwsQW and
+# other packages that contain the necessary functions
+library(dataRetrieval)
+library(rloadest)
+app3.qw <- importNWISqw("01646580", params="00660", 
+    begin.date="2001-10-01", end.date="2010-09-30")
+app3.flow <- renameNWISColumns(readNWISdv("01646502", "00060",
+    startDate="2001-10-01", endDate="2010-09-30"))
+@
+
+The second step is to merge the flow data with the water-quality data to produce a calibration dataset. The function \texttt{mergeQ} extracts the flow data from the flow dataset and merges the daily flow with the sample date in the water-quality dataset. For this analysis, we assume that a sample on any given day represents a valid estimate of the mean daily concentration. It requires that the names of the dates column match between the two datasets; the column \texttt{sample\_dt} in the water-quality data set is renamed to \texttt{Date} to match the date column in the flow dataset. A further requirement of \texttt{mergeQ} is that there are no replicate samples taken on the same day. In general, the concentration values with a day agree very well, for this example, simply delete the duplicated days. For other cases, it may be better to compute a mean-daily concentration.
+
+<<echo=TRUE>>=
+# There are duplicated samples in this dataset. Print them
+subset(app3.qw, sample_dt %in% 
+  app3.qw[duplicated(app3.qw$sample_dt), "sample_dt"])
+# Remove the duplicates
+app3.qw <- subset(app3.qw, !duplicated(sample_dt))
+# Now change the date column name and merge
+names(app3.qw)[2] <- "Date"
+# Supress the plot in this merge
+app3.calib <- mergeQ(app3.qw, FLOW="Flow", DATES="Date", 
+                     Qdata=app3.flow, Plot=FALSE)
+@
+
+\eject
+\section{Build the Model}
+
+The \texttt{loadReg} function is used to build the rating-curve model for constituent load estimation. The basic form of the call to \texttt{loadReg} is similar to the call to \texttt{lm} in that it requires a formula and data source. The response variable in the formula is the constituent concentration, which is converted to load per day (flux) based on the units of concentration and the units of flow. The \texttt{conc.units}, \texttt{flow.units}, and \texttt{load.units} arguments to \texttt{loadReg} define the conversion. For these data, the concentration units (\texttt{conc.units}) are "mg/L" (as orthophosphate) and are known within the column so do not need to be specified, the flow units are "cfs" (the default), and the load units for the model are "kilograms." Two additional pieces of information are required for \texttt{loadReg}---the names of the flow column and the dates column. A final option, the station identifier, can also be specified.
+
+<<echo=TRUE>>=
+# Create and print the load model.
+app3.lr <- loadReg(OrthoPhosphate.PO4 ~ model(9), data = app3.calib, 
+  flow = "Flow", dates = "Date",
+  station="Potomac River at Chain Bridge, at Washington, DC")
+print(app3.lr)
+@
+
+A few details from the printed report deserve mention--the second order flow and decimal time terms have p-values that are greater than 0.05 and may not be necessary; the p-value of the PPCC test is less that 0.05, which suggests a lack of normality; the serial correlation  of the residuals is 0.3576, which is quite large; and Bp is relatively large at 19.08.
+
+\eject
+\section{Diagnostic Plots}
+
+Figure 1 shows the AMLE 1:1 line as a dashed line and the solid line is a LOWESS smooth curve. The LOWESS curve indicates a good fit.
+<<echo=TRUE>>=
+# setSweave is required for the vignette.
+setSweave("app3_01", 5, 5)
+plot(app3.lr, which=1, set.up=FALSE)
+graphics.off()
+@
+<<results=tex, echo=FALSE>>=
+cat("\\includegraphics{app3_01.pdf}\n")
+cat("\\paragraph{}\n")
+@
+
+\textbf{Figure 1.} The rating-curve regression model.
+
+\eject
+Figure 2 is a scale-location (S-L) graph that is a useful graph for assessing heteroscedasticity of the residuals. The horizontal dashed line is the expected value of the square root of the absolute value of the residuals and the solid line is the LOWESS smooth. In this case, only 1 of the seven largest residuals is above the expected value line, which suggests in decreasing variance as the estimated load increases.
+<<echo=TRUE>>=
+# setSweave is required for the vignette.
+setSweave("app3_02", 5, 5)
+plot(app3.lr, which=3, set.up=FALSE)
+graphics.off()
+@
+<<results=tex, echo=FALSE>>=
+cat("\\includegraphics{app3_02.pdf}\n")
+cat("\\paragraph{}\n")
+@
+
+\textbf{Figure 2.} The scale-location graph for the regression model.
+
+\eject
+The correlogram in figure 3 is a adaptation of the correlogram from time-series analysis, which deals with regular samples. The horizontal dashed line is the zero value and the solid line is a kernel smooth rather than a LOWESS line. The kernel smooth gives a better fit in this case. The solid line should be very close to the horizontal line. In this case, there is a suggestion of a long-term lack of fit because the solid line is above the horizontal line for a 1-year lag.
+<<echo=TRUE>>=
+# setSweave is required for the vignette.
+setSweave("app3_03", 5, 5)
+plot(app3.lr, which=4, set.up=FALSE)
+graphics.off()
+@
+<<results=tex, echo=FALSE>>=
+cat("\\includegraphics{app3_03.pdf}\n")
+cat("\\paragraph{}\n")
+@
+
+\textbf{Figure 3.} The correlogram from the regression model.
+
+\eject
+Figure 4 shows the q-normal plot of the residuals. The visual appearance of figure 4 confirms the results of the PPCC test in the printed output---the largest residuals trail off the line.
+<<echo=TRUE>>=
+# setSweave is required for the vignette.
+setSweave("app3_04", 5, 5)
+plot(app3.lr, which=5, set.up=FALSE)
+graphics.off()
+@
+<<results=tex, echo=FALSE>>=
+cat("\\includegraphics{app3_04.pdf}\n")
+cat("\\paragraph{}\n")
+@
+
+\textbf{Figure 4.} The Q-normal plot of the residuals.
+
+\eject
+Figure 5 shows the partial residual plot for decimal time (DECTIME). This one was selected because of the long-term lack of fit over time suggested by figure 3. The dashed line is the linear fit and the solid line is the LOWESS smooth. In this case, the LOWESS smooth does follow the fitted line, but there is a distinct pattern in the left part of the graph--most of the residuals are above the line up to a DECTIME value of about -3 and then most residuals are below the line to about -1, after which the residuals are fairly well behaved.
+<<echo=TRUE>>=
+# setSweave is required for the vignette.
+setSweave("app3_05", 5, 5)
+plot(app3.lr, which="DECTIME", set.up=FALSE)
+graphics.off()
+@
+<<results=tex, echo=FALSE>>=
+cat("\\includegraphics{app3_05.pdf}\n")
+cat("\\paragraph{}\n")
+@
+
+\textbf{Figure 5.} The partial residual plot for decimal time.
+
+\eject
+\section{Further Diagnostics}
+
+Figure 5 suggested a distinct pattern in the residuals in the early part of the record. Figure 6 replots the residuals on a date axis, so that it will be easier to relate to the date. The second call to \texttt{refLine} adds vertical lines at the water years.
+<<echo=TRUE>>=
+# setSweave is required for the vignette.
+setSweave("app3_06", 5, 5)
+timePlot(app3.calib$Date, residuals(app3.lr),
+         Plot=list(what="points"), ytitle="Residuals")
+refLine(horizontal=0)
+refLine(vertical=as.Date("2001-10-01") + years(0:9))
+graphics.off()
+@
+<<results=tex, echo=FALSE>>=
+cat("\\includegraphics{app3_06.pdf}\n")
+cat("\\paragraph{}\n")
+@
+
+\textbf{Figure 6.} Model residuals by date.
+
+The residuals for water-year 2002 are mostly greater than 0; those for watery-year 2003 are trending down and those for water-year 2004 are mostly less than 0. This raises the question about whether more persistent flow patterns affect the relation between flow and concentration. The code immediately below computes the average (first line) and water-year average (second line) flow. The pattern of water-year average flows closely matches the pattern of the residuals.
+
+<<echo=TRUE>>=
+mean(app3.flow$Flow)
+with(app3.flow, tapply(Flow, waterYear(Date), mean))
+@
+
+\eject
+\section{Modeling Flow Anomalies}
+
+Vecchia and others (2008) describe an approach for breaking down stream flow into what they call anomalies--long- to intermediate-term deviations from average flow and the residual high-frequency variation or daily residuals. That approach can be very useful in cases such as this where there is a strong relation between flow and concentration, but relatively persistent patterns of flow are not captured.
+
+The first step in modeling flow anomalies required retrieving data for a longer period of time. We'll retrieve data from two years prior to the start of the sampling record that we are working with. The additional two years of record were selected because the first one year would be all missing values and one additional year to establish a pattern going into 2001.  Then we'll construct a single 1-year anomaly, which seems to make sense from figure 6. This 6-parameter anomaly model is given by:
+\begin{equation}
+\log(Load_i)=\alpha_0+\alpha_1{A1yr_i}+\alpha_2{HFV_i}+\alpha_3{dT_i}+\alpha_4 \sin(2\pi{dT_i})+\alpha_5 \cos(2\pi{dT_i})+\epsilon_i,
+\end{equation}
+where $A1yr_i$ is the 1-year anomaly of the log of flow, $HFV_i$ is remaining high-frequency variation in the log of flow, and $dT_i$ is the decimal time for observation $i$.
+
+<<echo=TRUE>>=
+app3.anom <- renameNWISColumns(readNWISdv("01646502", "00060",
+  startDate="1999-10-01", endDate="2010-09-30"))
+app3.anom <- cbind(app3.anom, anomalies(log(app3.anom$Flow), 
+  a1yr=365))
+# The head would show missing values for a1yr and HFV
+tail(app3.anom)
+@
+
+The next step is to merge the flow and anomaly data with the water-quality data.
+
+<<echo=TRUE>>=
+# Supress the plot in this merge and overwrite app3.calib
+app3.calib <- mergeQ(app3.qw, FLOW=c("Flow", "a1yr", "HFV"),
+                     DATES="Date", 
+                     Qdata=app3.anom, Plot=FALSE)
+@
+
+The final step is to construct the model. Note that flow is not a necessary part of the model because it is represented by the anomalies, linear time is represented by \texttt{dectime(Date)}, and the seasonal components by \texttt{fourier(Date)}. Note also that decimal time is not centered, but could be by using the \texttt{center} function.
+
+<<echo=TRUE>>=
+app3.lra <- loadReg(OrthoPhosphate.PO4 ~ a1yr + HFV + dectime(Date)
+                    + fourier(Date),
+                    data = app3.calib, 
+                   flow = "Flow", dates = "Date",
+                   station="Potomac River at Chain Bridge, at Washington, DC")
+print(app3.lra)
+@
+
+The residual variance is much smaller than the original model, 0.4021 rather than 0.5126. The PPCC p-value is still less than 0.05, but much closer to 0.05. The serial correlation of the residuals is much smaller than the original 0.1914 rather than 0.3576. But the Bp statistic is a bit larger 22.63 percent rather than 19.08. In spite of the larger Bp statistic, the Nash-Sutcliffe statistic (E) is larger 0.6723 rather than 0.5439. All of this suggests a better model. Review some of the diagnostic plots.
+
+\eject
+
+Figure 7 shows the AMLE 1:1 line as a dashed line and the solid line is a LOWESS smooth curve. The LOWESS curve indicates a good fit.
+<<echo=TRUE>>=
+# setSweave is required for the vignette.
+setSweave("app3_07", 5, 5)
+plot(app3.lra, which=1, set.up=FALSE)
+graphics.off()
+@
+<<results=tex, echo=FALSE>>=
+cat("\\includegraphics{app3_07.pdf}\n")
+cat("\\paragraph{}\n")
+@
+
+\textbf{Figure 7.} The revised rating-curve regression model.
+
+\eject
+Figure 8 shows the S-L graph, which indicates some decrease in variance for larger fitted values than for smaller.
+<<echo=TRUE>>=
+# setSweave is required for the vignette.
+setSweave("app3_08", 5, 5)
+plot(app3.lra, which=3, set.up=FALSE)
+graphics.off()
+@
+<<results=tex, echo=FALSE>>=
+cat("\\includegraphics{app3_08.pdf}\n")
+cat("\\paragraph{}\n")
+@
+
+\textbf{Figure 8.} The scale-location graph for the revised regression model.
+
+\eject
+The correlogram in figure 9 shows more variability than one would like, but no distinct long-term or seasonal patterns.
+<<echo=TRUE>>=
+# setSweave is required for the vignette.
+setSweave("app3_09", 5, 5)
+plot(app3.lra, which=4, set.up=FALSE)
+graphics.off()
+@
+<<results=tex, echo=FALSE>>=
+cat("\\includegraphics{app3_09.pdf}\n")
+cat("\\paragraph{}\n")
+@
+
+\textbf{Figure 9.} The correlogram from the revised regression model.
+
+\eject
+Figure 10 shows the q-normal plot of the residuals. The largest residuals trail off the line for this analysis but not quite as much as in the original model.
+<<echo=TRUE>>=
+# setSweave is required for the vignette.
+setSweave("app3_10", 5, 5)
+plot(app3.lra, which=5, set.up=FALSE)
+graphics.off()
+@
+<<results=tex, echo=FALSE>>=
+cat("\\includegraphics{app3_10.pdf}\n")
+cat("\\paragraph{}\n")
+@
+
+\textbf{Figure 10.} The Q-normal plot of the residuals from the revised model.
+
+\eject
+Figure 11 shows the partial residual plot for decimal time. This one was selected because of the long-term lack of fit over time suggested by figure 3. The dashed line is the linear fit and the solid line is the LOWESS smooth. In this case, the LOWESS smooth does follow the fitted line, but there is a distinct pattern in the left part of the graph--most of the residuals are above the line up to a DECTIME value of about -3 and then most residuals are below the line to about -1, after which the residuals are fairly well behaved.
+<<echo=TRUE>>=
+# setSweave is required for the vignette.
+setSweave("app3_11", 5, 5)
+plot(app3.lra, which="dectime(Date)", set.up=FALSE)
+graphics.off()
+@
+<<results=tex, echo=FALSE>>=
+cat("\\includegraphics{app3_11.pdf}\n")
+cat("\\paragraph{}\n")
+@
+
+\textbf{Figure 11.} The partial residual plot for decimal time.
+
+\eject
+\section{Load Estimates}
+
+Because we used anomalies in the regression model, we must be very careful to use the same anomalies in the estimation data. The data that were retrieved to compute the anomalies include dates outside of the calibration period, so must be subsetted to the calibration period. We'll compute load estimates for the water years 2002 through 2010
+
+<<echo=TRUE>>=
+app3.est <- subset(app3.anom, Date > as.Date("2001-09-30"))
+predLoad(app3.lra, newdata = app3.est, by="water year",
+         print=TRUE)
+@
+
+\end{document}

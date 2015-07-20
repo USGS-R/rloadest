@@ -1,0 +1,253 @@
+\documentclass{article}
+\parskip 3pt
+%\VignetteIndexEntry{Analysis of an Uncensored Constituent using a Seasonal Model}
+%\VignetteDepends{rloadest}
+
+\begin{document}
+\SweaveOpts{concordance=TRUE}
+\raggedright
+\parindent 30 pt
+
+\title{Application 2: Analysis of an Uncensored Constituent using a Seasonal Model}
+
+\author{Dave Lorenz}
+
+\maketitle
+
+This example illustrates the construction of a rating-curve load model from a user-defined formula rather than a predefined rating curve model. It also demonstrates how to make load estimates for data outside of the calibration data.
+
+Many constituents are subject to seasonal loading patterns that are driven by external factors such as the length of the growing season, air temperature, and anthropogenic activities. Some of the predefined models implement sine and cosine terms to reflect the seasonality of constituent load. These models are applicable to constituents that change continuously over the seasonal cycle, but are not appropriate for other constituents that are subject to an abrupt seasonal change. Such is the case for pesticides, where springtime application results in a distinct change in the loading pattern for a discrete period of time (fig. 1). When such changes are evident in the data, it often is beneficial to use categorical explanatory variables, often called dummy variables in older literature, (Judge and others, 1988; Helsel and Hirsch, 2002) to handle the abrupt change.
+
+In this example, data from the St. Joseph River near Newville, Ind., is used with a user-defined periodic seasonal model to estimate atrazine loads. Observations of atrazine load show two distinct relations with regard to streamflow; for a given streamflow, atrazine loads are elevated during the 3 month period following pesticide application, May through July, and dramatically lower thereafter. This two-tiered loading response is modeled using the categorical explanatory variables present in per,
+\begin{equation}
+\log(Load_i)=\alpha_0+\alpha_1 per_i+\alpha_2{lnQ_i}+\alpha_3{per_i}{lnQ_i}+\epsilon_i,
+\end{equation}
+where $lnQ_i$ is the centered log of streamflow and $per_i$ is a categorical variable that indicates the seasonal period for observation $i$. The regression line for estimation during the May though July time period will have an intercept equal to $a_0$+$a_1$, and a slope of $a_2$+$a_3$. For the other time period (August through April), per will equal 0 and the regression equation corresponds to the simple model used in Application 1.
+
+Part 2 illustrates the diagnostic graphs that can be used to verify the model assumptions or improve the model. A seasonal-wave approach to modeling seasonal is introduced and other graphs to help better understand the model.
+
+<<echo=TRUE>>=
+# Load the rloadest package and the data
+library(rloadest)
+data(app2.calib)
+head(app2.calib)
+# Plot the seasonal pattern of Atrazine
+# setSweave is required for the vignette.
+setSweave("app2_01", 5, 5)
+with(app2.calib, seasonPlot(DATES, Atrazine, yaxis.log=TRUE))
+graphics.off()
+@
+<<results=tex, echo=FALSE>>=
+cat("\\includegraphics{app2_01.pdf}\n")
+cat("\\paragraph{}\n")
+@
+\textbf{Figure 1.} The seasonal pattern of atrazine concentrations.
+
+\eject
+\section{Build the Model}
+
+The first step is to create the categorical explanatory variable in the calibration data set. That is easily done using the \texttt{seasons} function, which is in the USGSwsBase package. The order of the \texttt{breaks} argument in \texttt{seasons} must be sequential through the year, but can overlap the end of the year.
+
+<<echo=TRUE>>=
+# Add Period to the calibration data.
+app2.calib <- transform(app2.calib, Period=seasons(DATES, 
+                        breaks=c("Apr", "Jul")))
+@
+
+The \texttt{loadReg} function is used to build the rating-curve model for constituent load estimation. The basic form of the call to \texttt{loadReg} is similar to the call to \texttt{lm} in that it requires a formula and data source. The response variable in the formula is the constituent concentration, which is converted to load per day (flux) based on the units of concentration and the units of flow. The \texttt{conc.units}, \texttt{flow.units}, and \texttt{load.units} arguments to \texttt{loadReg} define the conversion. For these data, the concentration units (\texttt{conc.units}) are "ug/L", the flow units are "cfs" (the default), and the load units for the model are "pounds." Two additional pieces of information are required for \texttt{loadReg}---the names of the flow column and the dates column. A final option, the station identifier, can also be specified.
+
+User defined models can be constructed using using the usual rules for constructing regression models in \texttt{R}. For this example, we'll take advantage of the * operator to add both the period and log centered flow terms and the interaction term. Details of the differences between the  printed output from LOADEST and rloadest were described in application 1, so the short form is printed in this example.
+
+<<echo=TRUE>>=
+# Create and print the load model.
+app2.lr <- loadReg(Atrazine ~ Period*center(log(FLOW)), data = app2.calib,
+                   flow = "FLOW", dates = "DATES", conc.units="ug/L", 
+                   load.units="pounds",
+                   station="St.Joseph River near Newville, Ind.")
+# Warnings are not printed in the vignette
+warnings()
+app2.lr
+@
+
+\eject
+\section{Estimate Loads}
+
+Unlike LOADEST, rloadest requires to the user to build the rating-curve model before estimating loads and will only estimate loads for one type of aggregation at a  time, for example total load or loads by season. Before we can estimate loads, we need to get the data and add the same seasonal definition that was used to build the load model.
+
+<<echo=TRUE>>=
+# Load the estimation data and add Period
+data(app2.est)
+app2.est <- transform(app2.est, Period=seasons(DATES, 
+                      breaks=c("Apr", "Jul")))
+@
+
+The \texttt{predLoad} function is used to estimate loads. It estimates loads in units per day, which is referred to as flux in rloadest. The arguments for \texttt{predLoad} are \texttt{fit}, the model output from \texttt{loadReg}; \texttt{newdata}, the estimation dataset; \texttt{load.units}, the load units for the estimates, which are taken from the model output if not specified; \texttt{by}, a character string indicating how to aggregate the load estimates; \texttt{sd}, how to compute the standard error of the load; \texttt{allow.incomplete}, a logical value that indicates whether or not to allow incomplete periods to be estimated; and \texttt{print}, indicating whether to print a summary.
+
+Unlike the \texttt{predict} function in base \texttt{R}, \texttt{newdata} is required. The columns in \texttt{newdata} must match the column names in the calibration dataset. For predefined models, the column names for dates and flow must match.
+
+The \texttt{by} argument must be "unit," "day,", "month," "water year," "calendar year," "total," or the name of a grouping column in \texttt{newdata}. The "unit" option is not available in version 0.1.
+
+The argument \texttt{sd} must be "exact" in version 0.1. Any other value will not give correct values. The argument \texttt{allow.incomplete} is not fully implemented in version 0.1.
+
+The total load estimate for Application 2 that matches that in LOADEST can be made using call in the \texttt{R} code below.
+
+<<echo=TRUE>>=
+predLoad(app2.lr, newdata = app2.est, by="total",
+         print=TRUE)
+@
+
+To create the matching seasonal loads in LOADEST, a column that defines the seasons must be added to the estimation data set. That can also be accomplished using the \texttt{seasons} function as shown below. The order of the seasons will be different from LOADEST, but the season names will make sense.
+<<echo=TRUE>>=
+app2.est <- transform(app2.est, Season=seasons(DATES, 
+                      breaks=c("Jan", "Apr", "Jul", "Oct")))
+@
+The seasonal load estimates for Application 2 that matches that in LOADEST can be made using call in the \texttt{R} code below. In this case, we'll save the output dataset and print it.
+
+<<echo=TRUE>>=
+app2.seas <- predLoad(app2.lr, newdata = app2.est, by="Season")
+app2.seas
+@
+\eject
+\section{Diagnostic Plots}
+
+Figure 2 shows the AMLE 1:1 line as a dashed line and the solid line is a LOWESS smooth curve. The LOWESS curve indicates departure from regression line for larger fitted values. Figure 2 is related for figure 11 in Runkel and others (2004), but collapses the two regression lines into a single line. The largest 5 values show exactly the same pattern between the two figures,being above the regression line, which helps to understand the -14.06 Bp statistic.
+<<echo=TRUE>>=
+# setSweave is required for the vignette.
+setSweave("app2_02", 5, 5)
+plot(app2.lr, which=1, set.up=FALSE)
+graphics.off()
+@
+<<results=tex, echo=FALSE>>=
+cat("\\includegraphics{app2_02.pdf}\n")
+cat("\\paragraph{}\n")
+@
+
+\textbf{Figure 2.} The rating-curve regression model.
+
+\eject
+Figure 3 is a scale-location (S-L) graph that is a useful graph for assessing heteroscedasticity of the residuals. The horizontal dashed line is the expected value of the square root of the absolute value of the residuals and the solid line is the LOWESS smooth. In this case, only 1 of the largest seven residuals is below the expected value line and most of the other smaller residuals are below the line, which suggests in increasing variance as the estimated load increases.
+<<echo=TRUE>>=
+# setSweave is required for the vignette.
+setSweave("app2_03", 5, 5)
+plot(app2.lr, which=3, set.up=FALSE)
+graphics.off()
+@
+<<results=tex, echo=FALSE>>=
+cat("\\includegraphics{app2_03.pdf}\n")
+cat("\\paragraph{}\n")
+@
+
+\textbf{Figure 3.} The scale-location graph for the regression model.
+
+\eject
+The correlogram in figure 4 is a adaptation of the correlogram from time-series analysis, which deals with regular samples. The horizontal dashed line is the zero value and the solid line is a kernel smooth rather than a LOWESS line. The kernel smooth gives a better fit in this case. The solid line should be very close to the horizontal line. In this case, there is a suggestion of a seasonal lack of fit. Note that because the time frame of the calibration period is only 20 months long, the smoothed line is not very reliable greater than about 10 months (about 0.8 units on the X-axis).
+<<echo=TRUE>>=
+# setSweave is required for the vignette.
+setSweave("app2_04", 5, 5)
+plot(app2.lr, which=4, set.up=FALSE)
+graphics.off()
+@
+<<results=tex, echo=FALSE>>=
+cat("\\includegraphics{app2_04.pdf}\n")
+cat("\\paragraph{}\n")
+@
+
+\textbf{Figure 4.} The correlogram from the regression model.
+
+\eject
+Figure 5 shows the q-normal plot of the residuals. The visual appearance of figure 5 confirms the results of the PPCC test in the printed output---the residuals are not normally distributed but are left-skewed.
+<<echo=TRUE>>=
+# setSweave is required for the vignette.
+setSweave("app2_05", 5, 5)
+plot(app2.lr, which=5, set.up=FALSE)
+graphics.off()
+@
+<<results=tex, echo=FALSE>>=
+cat("\\includegraphics{app2_05.pdf}\n")
+cat("\\paragraph{}\n")
+@
+
+\textbf{Figure 5.} The Q-normal plot of the residuals.
+
+\eject
+\section{Part 2, Building a Seasonal-wave Load Model}
+
+All of the diagnostic plots in the previous section indicated a cause for concern about the validity of the periodic regression model. Vecchia and others (2008) describe a seasonal-wave function that often works well for pesticide models.
+
+The USGSwsStats package contains the tools necessary to construct a seasonal-wave model. Building a good regression model is a multi-step process, required identifying the timing of the peak concentration and the other parameters of the seasonal-wave model.
+
+The first step in constructing the seasonal-wave model is the identify the peak and potential values for the other parameters of the model. That involves building a regression model without any seasonal terms, and using the \texttt{seasonalPeak} function on the residuals to construct a first guess on those parameters. In this case, because there are no censored values, we can use \texttt{lm} instead of \texttt{censReg}. Note that it does not matter whether we use load or concentration because the residuals are the same.
+
+<<echo=TRUE>>=
+# Create the limited regression model.
+app2.lm <- lm(log(Atrazine) ~ center(log(FLOW)), data = app2.calib)
+app2.sp <- seasonalPeak(dectime(app2.calib$DATES), residuals(app2.lm))
+app2.sp
+@
+
+The next step in constructing the seasonal-wave model is to confirm the peak. This step requires the \texttt{confirm} function, which is interactive and cannot be demonstrated in a vignette. In this case, we can accept the default selection and estimated parameters. The user should step through the interactive process.
+
+<<echo=TRUE>>=
+# Show the plot for this example
+setSweave("app2_06", 5, 5)
+confirm(app2.sp, plot.only=TRUE)
+graphics.off()
+# Confirm the seasonalPeak analysis for a single peak.
+app2.sp <- confirm(app2.sp, all=TRUE)
+app2.sp
+@
+<<results=tex, echo=FALSE>>=
+cat("\\includegraphics{app2_06.pdf}\n")
+cat("\\paragraph{}\n")
+@
+
+\textbf{Figure 6.} The seasonal peak graph.
+
+The \texttt{selBestWave} function can be used to select the "best" parameters for the seasonal-wave model. It requires a column in decimal time format. The following code adds the column \texttt{Dectime} and executes \texttt{selBestWave}. The results from \texttt{selBestWave} are simply printed, but could be saved. Even though the timing of the peak is pretty clear from the graph, we'll take advantage of the exhaustive search to find the "best" peak too.
+
+<<echo=TRUE>>=
+# Add Dectime.
+app2.calib <- transform(app2.calib, Dectime=dectime(DATES))
+# Find the best model
+selBestWave(log(Atrazine) ~ center(log(FLOW)), data = app2.calib,
+            "Dectime", app2.sp, exhaustive=TRUE)
+@
+
+The "best" model has the timing of the peak at about .45 instead of 0.419 (a bit later in the year), a pesticide loading period of 2 months and a decay rate indicated by a half-life of 3 months (the second slowest decay rate among the default choices). We are now ready to build and evaluate the seasonal-wave load model.
+
+<<echo=TRUE>>=
+# Create and print the seasonal-wave load model.
+app2.lrsw <- loadReg(Atrazine ~ center(log(FLOW)) +
+                       seasonalWave(Dectime, 0.45, 2, 3), 
+                     data = app2.calib, flow = "FLOW", 
+                     dates = "DATES", conc.units="ug/L", 
+                     load.units="pounds",
+                     station="St.Joseph River near Newville, Ind.")
+app2.lrsw
+@
+
+The Bias Diagnostics indicate a much poorer fit for this model than the periodic seasonal model originally fit. The seasonal-wave model should be rejected. The periodic seasonal model could be used, but the load estimates are poor. A better understanding of why the periodic seasonal model is better than the seasonal-wave model can be gained by graphing the relation between flow and concentration (fig. 7).
+
+<<echo=TRUE>>=
+# Use colorPlot to show the relation by season
+setSweave("app2_07", 5, 5)
+AA.pl <- with(app2.calib, colorPlot(FLOW, Atrazine, color=Period, 
+        yaxis.log=TRUE, xaxis.log=TRUE))
+addExplanation(AA.pl, "ul", title="Period")
+graphics.off()
+@
+<<results=tex, echo=FALSE>>=
+cat("\\includegraphics{app2_07.pdf}\n")
+cat("\\paragraph{}\n")
+@
+
+\textbf{Figure 7.} The relation between atrazine concentration and streamflow by period.
+
+Figure 7 is related to figure 11 in Runkel and others (2004), but shows concentration instead of load. Four values stand out as lying outside of their respective seasons---three in the "Season Ending Jul" have concentrations less than about 0.7 and one in the "Season Ending Apr" has a concentrations greater than about 0.7. They are shown below. These atypical observations could contribute to the poor performance of the load models.
+
+<<echo=TRUE>>=
+subset(app2.calib, Period=="Season Ending Jul" & Atrazine < .7)
+subset(app2.calib, Period=="Season Ending Apr" & Atrazine > .7)
+@
+
+\end{document}

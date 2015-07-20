@@ -147,7 +147,7 @@ plot.loadReg <- function(x, which='All', set.up=TRUE, span=1.0, ...) {
   if(doPlot[4L])
     corGram(dectime(x$Time), Resids)
   ## Add details of call on regression model to next plots
-  Mod <- format(x$lfit$call$formula)
+  Mod <- paste0(as.character(x$lfit$call$formula[2L]), " ~ model(", x$model.no, ")")
   ## 3rd plot, S-L
   RSE <- rmse(x$lfit) # now the resid std. error
   if(doPlot[3L]) {

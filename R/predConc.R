@@ -39,17 +39,14 @@
 #'  station="Illinois River at Marseilles, Ill.")
 #'predConc(app1.lr, app1.calib)
 #' @useDynLib rloadest estlday
+#' @import lubridate
 #' @export
 predConc <- function(fit, newdata, by="day", 
                      allow.incomplete=FALSE, conf.int=0.95) {
-  ## Coding history:
-  ##    2013Jul18 DLLorenz Original Coding from predLoad
-  ##    2013Dec05 DLLorenz Bug fix
-  ##    2014Sep23 DLLorenz Missing check on newdata
   ##
   ## By options and other preliminary code
-  if(any(is.na(newdata)))
-    stop("newdata contains missing values, remove before prediction")
+  if(is.null(fit$cfit))
+    stop("model cannot predict concentration values")
   if(nrow(newdata) > 176000L)
     stop("newdata has too many rows, the size limit is 176000")
   ByOpt <- c("unit", "day")
@@ -97,6 +94,8 @@ predConc <- function(fit, newdata, by="day",
   } else {
     model.inp <- setXLDat(newdata, flow, dates, Qadj, Tadj, model.no)
   }
+  if(any(is.na(model.inp)))
+    stop("Prediction data contains missing values, remove before prediction")
   ## Construct the structure for aggregating the data
   ## Deal with byn == 0 directly in the last estimation section
   checkDays <- list() # Create empty list for day checking

@@ -22,8 +22,8 @@
 #' @param time.step character string describing the time step of 
 #'the calibration data.
 #' @param station character string description of the station.
-#' @param criterion the criterion to use for subset selection, must be either "AIC"
-#'or "SPPC."
+#' @param criterion the criterion to use for subset selection, must be 
+#'one of "AIC," "SPCC," or "AICc."
 #'
 #' @seealso \code{\link{censReg}}, \code{\link[stats]{step}}
 #' @return An object of class "loadReg."
@@ -37,7 +37,8 @@
 #' @export
 selBestSubset <- function(formula, min.formula=~1, data, subset, na.action, flow, 
 													dates, flow.units = "cfs", conc.units = "", load.units = "kg",
-													time.step = "day", station = "", criterion=c("AIC", "SPPC")) {
+													time.step = "day", station = "", 
+                          criterion=c("AIC", "SPCC", "AICc")) {
 	# First extract the call to construct a data frame for the model
 	criterion <- match.arg(criterion)
 	m <- call <- match.call()
@@ -89,13 +90,22 @@ selBestSubset <- function(formula, min.formula=~1, data, subset, na.action, flow
 	m$load.units <- m$time.step <- m$station <- m$criterion <- NULL
 	m$data <- df
 	m$dist <- "lognormal"
-	k <- if(criterion == "AIC") 2 else log(nrow(df))
+	if(criterion == "AIC") {
+	  k <- 2
+    correct <- FALSE
+	} else if(criterion == "SPCC") {
+    k <- log(nrow(df))
+    correct <- FALSE
+	} else { # Must be AICc
+    k <- 2
+    correct <- TRUE
+	}
 	m <- eval(m)
 	## Warn if fewer N than 10*potential params
 	if(m$NOBSC < 10L * (m$NPAR - 1L))
 	  warning("Selected model may be over fit: only ", 
 	          m$NOBSC, " observations for ", m$NPAR, " possible parameters.")
-  best <- step(m, scope=min.formula, direction="both", trace=0, k=k)
+  best <- step(m, scope=min.formula, direction="both", trace=0, k=k, correct=correct)
 	# retain the step wise model selections
 	model.eval <- best$anova
 	names(model.eval)[[6L]] <- criterion # Fix this to represent what was really done

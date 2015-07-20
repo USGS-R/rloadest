@@ -9,8 +9,14 @@
 #'For un- or left-censored data, AMLE is used unless weights are specified in
 #'the model, then MLE is used, through a call to \code{survreg}. For any other 
 #'censored data, MLE is used.\cr
-#'See \code{\link{loadConvFactor}} for details about valid values for 
-#'\code{flow.units}, \code{con.units} and \code{load.units}.
+#'
+#'Typically, \code{loadReg} expects the response variable to have units of
+#'concentration, mass per volume. For these models, See \code{\link{loadConvFactor}}
+#'for details about valid values for \code{flow.units}, \code{conc.units} and 
+#'\code{load.units}. For some applications, like bed load estimation, the response
+#'variable can have units of flux, mass per time. For these models, \code{conc.units}
+#'can be expressed as any valid \code{load.units} per day. The rate must be expressed
+#'in terms of "/d," "/dy," or "/day."
 #'
 #' @param formula a formula describing the regression model. See \bold{Details}.
 #' @param data the data to search for the variables in \code{formula}.
@@ -44,14 +50,22 @@
 #'  flow = "FLOW", dates = "DATES", conc.units="mg/L",
 #'  station="Illinois River at Marseilles, Ill.")
 #'print(app1.lr)
-#'
+#' @import smwrBase
 #' @import smwrQW
 #' @export
 loadReg <- function(formula, data, subset, na.action, flow, dates,
                     flow.units="cfs", conc.units="", load.units="kg", 
                     time.step="day", station="") {
-  ## Coding history:
-  ##    2013May31 DLLorenz Original Coding
+  ## Function to check if conc.units are in terms of loads
+  ## returns logical with attribute of loads if TRUE
+  ckLoad <- function(units) {
+    # check if rate is /d, /dy, or /day (actually any /d)
+    retval <- grepl("/d", units)
+    if(retval) { # strip off rate
+      attr(retval, "load") <- sub("/d.*", "", units)
+    }
+    return(retval)
+  }
   ##
   ## Trap model number specification
   PredMod <- terms(formula, "model", data = data)
@@ -199,41 +213,49 @@ loadReg <- function(formula, data, subset, na.action, flow, dates,
     }
     Tdys <- min(Tdifs)
     if(Tdys < 7)
-      warning("The minimum spacing between daily loads is ", Tdys,
+      warning("The minimum spacing between daily loads is ", signif(Tdys, 2L),
               " days. The time between observations should be at least ",
               " 7 days to avoid autocorrelation issues.")
   } else { # Need unit checks too
     Tdys <- difftime(Time, shiftData(Time), units="days")
     Tdys <- min(Tdys, na.rm=TRUE)
     if(Tdys < 7)
-      warning("The minimum spacing between daily loads is ", Tdys,
+      warning("The minimum spacing between observed loads is ", signif(Tdys, 2L),
               " days. The time between observations should be at least ",
               " 7 days to avoid autocorrelation issues.")
   }
-  ## OK, construct the concentration fit
-  if(class(Y) == "lcens") {
-    cfit <- censReg_AMLE.fit(Y, X, "lognormal")
-    fit1 <- censReg_AMLE.fit(Y, X[,1L, drop=FALSE], "lognormal")
-  } else {
-    cfit <- censReg_MLE.fit(Y, X, rep(1, length(Y)), "lognormal")
-    fit1 <- censReg_MLE.fit(Y, X[,1L, drop=FALSE], 
-                             rep(1, length(Y)), "lognormal")
-  }
-  cfit$LLR1 <- fit1$LLR
-  cfit$call <- call
-  cfit$terms <- Terms
-  cfit$na.action <- saved.na.action
-  cfit$na.message <- na.message
-  cfit$xlevels <- xlevels
-  class(cfit) <- "censReg"
-  ## Not the load model fit
-  ## Check on concentration units
+  ## Checks on concentration units
   if(conc.units == "") {
     warning("Concentration units assumed to be mg/L")
     conc.units <- "mg/L"
   }
-  CF <- loadConvFactor(flow.units, conc.units, load.units)
-  Y <- Y * CF * Flow
+  load.only <- ckLoad(conc.units)
+  if(load.only) {
+    cfit <- NULL
+    ## Prepare for load model fit
+    CF <- loadUnitConv(attr(load.only, "load"), load.units)
+    Y <- Y * CF
+  } else {
+    ## OK, construct the concentration fit
+    if(class(Y) == "lcens") {
+      cfit <- censReg_AMLE.fit(Y, X, "lognormal")
+      fit1 <- censReg_AMLE.fit(Y, X[,1L, drop=FALSE], "lognormal")
+    } else {
+      cfit <- censReg_MLE.fit(Y, X, rep(1, length(Y)), "lognormal")
+      fit1 <- censReg_MLE.fit(Y, X[,1L, drop=FALSE], 
+                              rep(1, length(Y)), "lognormal")
+    }
+    cfit$LLR1 <- fit1$LLR
+    cfit$call <- call
+    cfit$terms <- Terms
+    cfit$na.action <- saved.na.action
+    cfit$na.message <- na.message
+    cfit$xlevels <- xlevels
+    class(cfit) <- "censReg"
+    ## Now prepare the load model fit
+    CF <- loadConvFactor(flow.units, conc.units, load.units)
+    Y <- Y * CF * Flow
+  }
   if(class(Y) == "lcens") {
     lfit <- censReg_AMLE.fit(Y, X, "lognormal")
     fit1 <- censReg_AMLE.fit(Y, X[,1L, drop=FALSE], "lognormal")

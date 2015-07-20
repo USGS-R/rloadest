@@ -8,18 +8,28 @@
 #' @param load.only print only the load model and not concentration model results.
 #' @param \dots further arguments passed to or from other methods.
 #' @return The object \code{x} is returned invisibly.
-#' @note The printed output includes the call, the coefficent table, the
-#'estimated residual standard error, the log-likelihood of the model and
-#'null model with the attained p-value, and the computational method.
-#' NEED more details about what is printed and the difference in output due to arguments
+#' @note The printed output replicates the output described in Runkel (2004) and
+#'includes a short section summarizing the data, the load model and coefficients,
+#'regression statistics, and comparison of observed and estimated loads. If
+#'\code{load.only} is set to \code{FALSE}, then similar output is generated for the
+#'concetration model. If \code{brief} is \code{FALSE}, then additional descriptions
+#'of selected sections of the output are produced.
+#'
+#'If the estimation method is "MLE," then the estimated loads used in the comparison
+#'to observed loads are approximate becuase they are estimated using MLE, rather than
+#'AMLE, wihch is used for \code{predLoad} and \code{predConc}. The bias is very small
+#'when the residual varaince is less than 0.5, but can be large when the residual
+#'variance is greater than 1.
+#'
 #' @seealso \code{\link{loadReg}}
 #' @keywords utilities
-#'
+#' @references
+#'Runkel, R.L., Crawford, C.G., and Cohn, T.A., 2004, Load estimator (LOADEST): 
+#'A FORTRAN program for estimating constituent loads in streams and rivers: 
+#'U.S. Geological Survey Techniques and Methods book 4, chap. A5, 69 p.
 #' @export
 #' @method print loadReg
 print.loadReg <- function(x, digits=4, brief=TRUE, load.only=brief, ...) {
-  ## Coding history:
-  ##    2013May31 DLLorenz Original Coding
   ##
   ## Explanations of model terms
   Explan <- c(lnQ="ln(Q) - center of ln(Q)",
@@ -66,7 +76,8 @@ print.loadReg <- function(x, digits=4, brief=TRUE, load.only=brief, ...) {
         "    Constituent Output File Part Ia: Calibration (Load Regression)\n",
         "----------------------------------------------------------------------\n\n",
         sep="")
-  Ncen <- sum(x$lfit$CENSFLAG)
+  # CENSFLAG is logical for AMLE, integer for MLE, this protects
+  Ncen <- sum(x$lfit$CENSFLAG != 0)
   cat("           Number of Observations: ", x$lfit$NOBSC, "\n",
       "Number of Uncensored Observations: ",
       x$lfit$NOBSC - Ncen, "\n",
@@ -105,7 +116,7 @@ print.loadReg <- function(x, digits=4, brief=TRUE, load.only=brief, ...) {
     RSQ <- signif(x$lfit$RSQ, digits)
     RSQtxt <- "R-squared: "
   } else {
-    RSQ <- 100*signif(1 - exp(x$lfit$LLR1 - x$lfit$LLR)^(2/x$lfit$NOBSC), digits)
+    RSQ <- 100*signif(1 - exp((x$lfit$LLR1 - x$lfit$LLR)*2/x$lfit$NOBSC), digits)
     RSQtxt <- "Generalized R-squared: "
   }
   G2 <- signif(2*(x$lfit$LLR - x$lfit$LLR1), digits)
@@ -117,20 +128,33 @@ print.loadReg <- function(x, digits=4, brief=TRUE, load.only=brief, ...) {
     pval <- format(round(pval, 4), scientific=5)
   ## Compute the PPCC
   Res <- residuals(x$lfit, type="working", suppress.na.action=TRUE)
-  ppcc <- censPPCC.test(as.lcens(Res, censor.codes=x$lfit$CENSFLAG))
-  cat("\n", x$method, " Regression Statistics\n",
-      "Residual variance: ", 
-      signif(x$lfit$PARAML[x$lfit$NPAR + 1L], digits), "\n",
-      RSQtxt, RSQ, " percent\n",
-      "G-squared: ", G2, " on ", x$lfit$NPAR - 1L, 
-      " degrees of freedom\n",
-      "P-value: ", pval, "\n",
-      "Prob. Plot Corr. Coeff. (PPCC):\n", 
-      "  r = ", round(ppcc$statistic, digits), "\n",
-      "  p-value = ", round(ppcc$p.value, digits), "\n",
-      "Serial Correlation of Residuals: ", 
-      round(x$lfit$SCORR, digits), "\n\n",
-      sep="")
+  if(x$method == "AMLE") {
+    ppcc <- censPPCC.test(as.lcens(Res, censor.codes=x$lfit$CENSFLAG))
+    cat("\n", x$method, " Regression Statistics\n",
+        "Residual variance: ", 
+        signif(x$lfit$PARAML[x$lfit$NPAR + 1L], digits), "\n",
+        RSQtxt, RSQ, " percent\n",
+        "G-squared: ", G2, " on ", x$lfit$NPAR - 1L, 
+        " degrees of freedom\n",
+        "P-value: ", pval, "\n",
+        "Prob. Plot Corr. Coeff. (PPCC):\n", 
+        "  r = ", round(ppcc$statistic, digits), "\n",
+        "  p-value = ", round(ppcc$p.value, digits), "\n",
+        "Serial Correlation of Residuals: ", 
+        round(x$lfit$SCORR, digits), "\n\n",
+        sep="")
+  } else { # ppcc test cannot be computed for interval or right-censored 
+    cat("\n", x$method, " Regression Statistics\n",
+        "Residual variance: ", 
+        signif(x$lfit$PARAML[x$lfit$NPAR + 1L], digits), "\n",
+        RSQtxt, RSQ, " percent\n",
+        "G-squared: ", G2, " on ", x$lfit$NPAR - 1L, 
+        " degrees of freedom\n",
+        "P-value: ", pval, "\n",
+        "Prob. Plot Corr. Coeff. (PPCC) cannot be computed for method MLE\n", 
+        "Serial Correlation of Residuals not computed for method MLE\n", 
+        sep="")
+  }
   if(!brief && x$lfit$NPAR > 2L) { # Print the correlation matrixes
     cat("Correlation Between Explanatory Variables\n",
         "-----------------------------------------\n\n", sep="")
@@ -154,8 +178,13 @@ print.loadReg <- function(x, digits=4, brief=TRUE, load.only=brief, ...) {
     colnames(vifs) <- "VIF"
     print(vifs, digits=digits)
   }
-  cat("\nComparison of Observed and Estimated Loads\n",
-      "------------------------------------------\n", sep="")
+  if(x$method == "AMLE") {
+    cat("\nComparison of Observed and Estimated Loads\n",
+        "------------------------------------------\n", sep="")
+  } else { # method is MLE
+    cat("\nComparison of Observed and Approximate Estimated Loads\n",
+        "------------------------------------------------------\n", sep="")
+  }
   if(!brief)
     cat("  The summary statistics and bias diagnostics presented below are based\n",
         "on a comparison of observed and estimated loads for all dates/times within\n",
@@ -251,7 +280,7 @@ print.loadReg <- function(x, digits=4, brief=TRUE, load.only=brief, ...) {
         sep="")
   }
   ## Concentration output
-  if(!load.only) {
+  if(!load.only && !is.null(x$cfit)) {
     if(!brief)
       cat("--------------------------------------------------------------------------\n",
           "    Constituent Output File Part Ia: Calibration (Concentration Regression)\n",
@@ -295,22 +324,40 @@ print.loadReg <- function(x, digits=4, brief=TRUE, load.only=brief, ...) {
       pval <- format(round(pval, 4), scientific=5)
     ## Compute the PPCC
     Res <- residuals(x$cfit, type="response")
-    ppcc <- censPPCC.test(as.lcens(Res, censor.codes=x$cfit$CENSFLAG))
-    cat("\n", x$method, " Regression Statistics\n",
-        "Residual variance: ", 
-        signif(x$cfit$PARAML[x$cfit$NPAR + 1L], digits), "\n",
-        RSQtxt, RSQ, " percent\n",
-        "G-squared: ", G2, " on ", x$cfit$NPAR - 1L, 
-        " degrees of freedom\n",
-        "P-value: ", pval, "\n",
-        "Prob. Plot Corr. Coeff. (PPCC):\n", 
-        "  r = ", round(ppcc$statistic, digits), "\n",
-        "  p-value = ", round(ppcc$p.value, digits), "\n",
-        "Serial Correlation of Residuals: ", 
-        round(x$cfit$SCORR, digits), "\n\n",
-        sep="")
-    cat("\nComparison of Observed and Estimated Concentrations\n",
-        "---------------------------------------------------\n", sep="")
+    if(x$method == "AMLE") {
+      ppcc <- censPPCC.test(as.lcens(Res, censor.codes=x$cfit$CENSFLAG))
+      cat("\n", x$method, " Regression Statistics\n",
+          "Residual variance: ", 
+          signif(x$cfit$PARAML[x$cfit$NPAR + 1L], digits), "\n",
+          RSQtxt, RSQ, " percent\n",
+          "G-squared: ", G2, " on ", x$cfit$NPAR - 1L, 
+          " degrees of freedom\n",
+          "P-value: ", pval, "\n",
+          "Prob. Plot Corr. Coeff. (PPCC):\n", 
+          "  r = ", round(ppcc$statistic, digits), "\n",
+          "  p-value = ", round(ppcc$p.value, digits), "\n",
+          "Serial Correlation of Residuals: ", 
+          round(x$cfit$SCORR, digits), "\n\n",
+          sep="")
+    } else {
+      cat("\n", x$method, " Regression Statistics\n",
+          "Residual variance: ", 
+          signif(x$cfit$PARAML[x$cfit$NPAR + 1L], digits), "\n",
+          RSQtxt, RSQ, " percent\n",
+          "G-squared: ", G2, " on ", x$cfit$NPAR - 1L, 
+          " degrees of freedom\n",
+          "P-value: ", pval, "\n",
+          "Prob. Plot Corr. Coeff. (PPCC) cannot be computed for method MLE\n", 
+          "Serial Correlation of Residuals not be computed for method MLE\n", 
+          sep="")
+    }
+    if(x$method == "AMLE") {
+      cat("\nComparison of Observed and Estimated Concentrations\n",
+          "---------------------------------------------------\n", sep="")
+    } else {
+      cat("\nComparison of Observed and Approximate Estimated Concentrations\n",
+          "---------------------------------------------------------------\n", sep="")
+    }
     if(!brief)
       cat("  The summary statistics and bias diagnostics presented below are based\n",
           "on a comparison of observed and estimated concentrations for all dates/times\n",
@@ -405,6 +452,6 @@ print.loadReg <- function(x, digits=4, brief=TRUE, load.only=brief, ...) {
           "      7, 8, 9, and 17 of the LOADEST documentation (Runkel et al., 2004).\n\n",
           sep="")
     }
-  } # End of load.only section
+  } # End of not load.only section
   invisible(x)
 }

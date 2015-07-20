@@ -19,6 +19,8 @@
 #' @param time.step character string describing the time step of 
 #'the calibration data.
 #' @param station character string description of the station.
+#' @param criterion the criterion to use for subset selection, must be 
+#'one of "AIC," "SPCC," or "AICc."
 #'
 #' @return An object of class "loadReg."
 #' @seealso \code{\link{censReg}}
@@ -35,20 +37,22 @@
 #'@export
 selBestModel <- function(constituent, data, subset, na.action, flow, dates,
                          flow.units="cfs", conc.units="", load.units="kg", 
-                         time.step="day", station="") {
-  ## Coding history:
-  ##    2013May31 DLLorenz Original Coding
+                         time.step="day", station="", 
+                         criterion=c("AIC", "SPCC", "AICc")) {
+  ##
+  criterion <- match.arg(criterion)
   ##
   ## Modify to make call to loadReg
   cl <- match.call()
   cl[[1L]] <- as.name("loadReg")
   names(cl)[2L] <- "formula"
   cl[[2L]] <- as.formula(paste(constituent, " ~ model(1)", sep=""))
+  cl$criterion <- NULL
   retval <- model <- eval(cl)
   model.eval <- model$model.eval
   # Append AICc
   model.eval$AICc <- AICc(model)
-  AICbest <- model.eval$AIC
+  AICbest <- model.eval[[criterion]]
   ## Supress multiple warnings
   warn <- options("warn")
   options(warn=-1L)
@@ -58,8 +62,8 @@ selBestModel <- function(constituent, data, subset, na.action, flow, dates,
     model.tmp <- model$model.eval
     model.tmp$AICc <- AICc(model)
     model.eval <- rbind(model.eval, model.tmp)
-    if(model$model.eval$AIC < AICbest) {
-      AICbest <- model$model.eval$AIC
+    if(model.tmp[[criterion]] < AICbest) {
+      AICbest <- model.tmp[[criterion]]
       retval <- model
     }
   }
