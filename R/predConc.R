@@ -190,9 +190,10 @@ predConc <- function(fit, newdata, by="day",
     names(retval)[6L:7L] <- Names
   } else if(by == "day") {
     ## One or more obs per day
+    ## KDate are the dates of the days
     ## KDays are the indexes to days
     ## Kin are the indexes to the good model inputs
-    ## Kdy are the indexes to the days
+    ## Kdy are the indexes to the days of model inputs
     ## KinAll are the indexes to all days
     ##
     ## Preserve flow for later
@@ -210,11 +211,12 @@ predConc <- function(fit, newdata, by="day",
       Kin <- Kin[is.finite(rowSums(model.inp))]
       KDate <- as.Date(as.POSIXlt(newdata[[dates]]))
       Kdy <- as.integer(KDate)
-      KDate <- unique(KDate)
-      Kdy <- Kdy - Kdy[1L] + 1L # make relative to first day (Index)
-      if(length(unique(table(Kdy))) > 1L && !allow.incomplete) {
+      Ktbl <- table(Kdy)
+      if(length(unique(Ktbl)) > 1L && !allow.incomplete) {
         warning("Variable observations per day, either set the allow.incomplete argument to TRUE or use the resampleUVdata function to construct a uniform series")
       }
+      Kdy <- rep(seq(1, length(Ktbl)), Ktbl) # Create the index to days in input
+      KDate <- unique(KDate)
       KinAll <- unique(Kdy)
       ## Make it daily flow, Flow0 indicates a partial 0 flow
       Flow0 <- tapply(Flow, Kdy, min) 

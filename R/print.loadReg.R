@@ -76,8 +76,15 @@ print.loadReg <- function(x, digits=4, brief=TRUE, load.only=brief, ...) {
         "    Constituent Output File Part Ia: Calibration (Load Regression)\n",
         "----------------------------------------------------------------------\n\n",
         sep="")
-  # CENSFLAG is logical for AMLE, integer for MLE, this protects
-  Ncen <- sum(x$lfit$CENSFLAG != 0)
+  # CENSFLAG is logical for AMLE, integer for MLE, this protects,
+  # but does not work for other than left-censored values.
+  if(x$method == "AMLE") {
+    Ncen <- sum(x$lfit$CENSFLAG != 0)
+  } else {
+    Centbl <- table(x$lfit$survreg$y[,3L])
+    Ncen <- x$lfit$NOBSC - Centbl["1"]
+    names(Centbl) <- c("0"="right", "1"="none", "2"="left", "3"="interval")[names(Centbl)]
+  }
   cat("           Number of Observations: ", x$lfit$NOBSC, "\n",
       "Number of Uncensored Observations: ",
       x$lfit$NOBSC - Ncen, "\n",
@@ -88,6 +95,11 @@ print.loadReg <- function(x, digits=4, brief=TRUE, load.only=brief, ...) {
       "                 Period of record: ",
       as.character(x$PoR[1L]), " to ", as.character(x$PoR[2L]), 
       "\n\n", sep="")
+  if(x$method == "MLE") {
+    cat("Censoring of data:\n")
+    print(Centbl)
+    cat("\n\n")
+  }
   if(!brief || nrow(x$model.eval) > 1) { # Capture best model selection
     cat("Model Evaluation Criteria Based on ", x$method, " Results\n",
         "-----------------------------------------------\n\n", sep="")
@@ -286,7 +298,13 @@ print.loadReg <- function(x, digits=4, brief=TRUE, load.only=brief, ...) {
           "    Constituent Output File Part Ia: Calibration (Concentration Regression)\n",
           "--------------------------------------------------------------------------\n\n",
           sep="")
-    Ncen <- sum(x$cfit$CENSFLAG)
+    if(x$method == "AMLE") {
+      Ncen <- sum(x$cfit$CENSFLAG != 0)
+    } else {
+      Centbl <- table(x$cfit$survreg$y[,3L])
+      Ncen <- x$cfit$NOBSC - Centbl["1"]
+      names(Centbl) <- c("0"="right", "1"="none", "2"="left", "3"="interval")[names(Centbl)]
+    }
     if(!brief) { # Capture best model selection
       cat("Model # ", x$model.no, " selected\n\n", sep="")
     }

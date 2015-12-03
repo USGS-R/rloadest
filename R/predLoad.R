@@ -215,9 +215,10 @@ predLoad <- function(fit, newdata, load.units=fit$load.units, by="total",
     names(retval)[6L:7L] <- Names
   } else if(by == "day") {
     ## One or more obs per day
+    ## KDate are the dates of the days
     ## KDays are the indexes to days
     ## Kin are the indexes to the good model inputs
-    ## Kdy are the indexes to the days
+    ## Kdy are the indexes to the days of model inputs
     ## KinAll are the indexes to all days
     ##
     ## Preserve flow for later
@@ -235,11 +236,12 @@ predLoad <- function(fit, newdata, load.units=fit$load.units, by="total",
       Kin <- Kin[is.finite(rowSums(model.inp))]
       KDate <- as.Date(as.POSIXlt(newdata[[dates]]))
       Kdy <- as.integer(KDate)
-      KDate <- unique(KDate)
-      Kdy <- Kdy - Kdy[1L] + 1L # make relative to first day (Index)
-      if(length(unique(table(Kdy))) > 1L && !allow.incomplete) {
+      Ktbl <- table(Kdy)
+      if(length(unique(Ktbl)) > 1L && !allow.incomplete) {
         warning("Variable observations per day, either set the allow.incomplete argument to TRUE or use the resampleUVdata function to construct a uniform series")
       }
+      Kdy <- rep(seq(1, length(Ktbl)), Ktbl) # Create the index to days in input
+      KDate <- unique(KDate)
       KinAll <- unique(Kdy)
       ## Make it daily flow, Flow0 indicates a partial 0 flow
       Flow0 <- tapply(Flow, Kdy, min) 
@@ -392,8 +394,8 @@ predLoad <- function(fit, newdata, load.units=fit$load.units, by="total",
         if(any(drop)) { # Any missing values?
           OK <- FALSE
           retby <- data.frame(Period="period", Ndays=NDays,
-                               Flux=NA_real_, Std.Err=NA_real_, 
-                               SEP=NA_real_, L95=NA_real_, U95=NA_real_)
+                              Flux=NA_real_, Std.Err=NA_real_, 
+                              SEP=NA_real_, L95=NA_real_, U95=NA_real_)
         } else {
           ## Check for complete periods
           Period <- as.character(newdata[[by]][period[1L]])
@@ -401,8 +403,8 @@ predLoad <- function(fit, newdata, load.units=fit$load.units, by="total",
             if(targN != NDays) {
               OK <- FALSE
               retby <- data.frame(Period="period", Ndays=NDays,
-                                   Flux=NA_real_, Std.Err=NA_real_, 
-                                   SEP=NA_real_, L95=NA_real_, U95=NA_real_)
+                                  Flux=NA_real_, Std.Err=NA_real_, 
+                                  SEP=NA_real_, L95=NA_real_, U95=NA_real_)
               
             }
           }
@@ -440,16 +442,16 @@ predLoad <- function(fit, newdata, load.units=fit$load.units, by="total",
         if(out.data$IERR > 0) {
           warning(" *** Error (",out.data$IERR,") occurred in processing data. ***\n",sep="")
           retby <- data.frame(Period="period", Ndays=NA_integer_,
-                               Flux=NA_real_, Std.Err=NA_real_, 
-                               SEP=NA_real_, L95=NA_real_, U95=NA_real_)
+                              Flux=NA_real_, Std.Err=NA_real_, 
+                              SEP=NA_real_, L95=NA_real_, U95=NA_real_)
         } else {
           ## OK, we've had a successful run, pack the data into a data frame
           retby <- data.frame(Period="period", Ndays=NDays,
-                               Flux=out.data$load * lcf, 
-                               Std.Err=sqrt(out.data$loadvar) * lcf, 
-                               SEP=out.data$loadsep * lcf, 
-                               L95=out.data$loadlow * lcf, 
-                               U95=out.data$loadup * lcf)
+                              Flux=out.data$load * lcf, 
+                              Std.Err=sqrt(out.data$loadvar) * lcf, 
+                              SEP=out.data$loadsep * lcf, 
+                              L95=out.data$loadlow * lcf, 
+                              U95=out.data$loadup * lcf)
         }
       }
       return(retby)
@@ -476,14 +478,14 @@ predLoad <- function(fit, newdata, load.units=fit$load.units, by="total",
           "calibration data set streamflow. Load estimates require extrapolation.\n\n",
           sep="")
     } else if(Qsum[2L, 1L] < Qsum[1L, 1L]) {
-	   cat("WARNING: The minimum estimation data set steamflow exceeds the minimum\n",
+      cat("WARNING: The minimum estimation data set steamflow exceeds the minimum\n",
           "calibration data set streamflow. Load estimates require extrapolation.\n\n",
           sep="")
-	} else {
+    } else {
       cat("The maximum estimation data set streamflow does not exceed the maximum\n",
           "calibration data set streamflow. No extrapolation is required.\n\n",
           sep="")
-	}
+    }
     if(!(by %in% c("day", "unit"))) {
       cat("\n-------------------------------------------------------------\n",
           "Constituent Output File Part IIb: Estimation (Load Estimates)\n",

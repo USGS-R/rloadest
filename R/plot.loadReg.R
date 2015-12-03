@@ -22,7 +22,7 @@
 #' @param span the span to use for the loess smooth. Set to 0 to suppress.
 #' @param \dots further arguments passed to or from other methods.
 #' @return The object \code{x} is returned invisibly.
-#' @note This plotting function uses the core routines in the \code{USGSwsGraphs}
+#' @note This plotting function uses the core routines in the \code{smwrGraphs}
 #'package. It requires a graphics page that is set up from the functions
 #'in that package (\code{setpage} or \code{setPDF}) if \code{set.up} is
 #'\code{FALSE}. The graphs that are produced by this function are based 

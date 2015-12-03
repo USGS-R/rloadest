@@ -36,9 +36,9 @@ for(sta in Staids) {
   # Change the names of dates and times. Note if the order
   # of the columns changes in the retrieval, then this needs to
   # be revised, use the name in the flow data.
-  names(QWtmp)[2:3] <- c("datetime", "TIMES")
+  names(QWtmp)[2:3] <- c("Date", "TIMES")
   # Merge the flow data into the water-quality data
-  QWtmp <- mergeQ(QWtmp, FLOW="Flow", DATES="datetime", 
+  QWtmp <- mergeQ(QWtmp, FLOW="Flow", DATES="Date", 
                   Qdata=Qtmp, Plot=FALSE)
   # Save the data
   assign(Qdata, Qtmp)
@@ -55,7 +55,7 @@ for(sta in Staids) {
     # use the actual name of the water-quality data rather
     # than the temporary dataset.
     assign(LR, selBestModel(paste("P", prm, sep=""), QWtmp, flow="Flow",
-                 dates="datetime", load.units=ld.unt,
+                 dates="Date", load.units=ld.unt,
                  station=sta))
     # Protect against errors
     if(get(LR)$lfit$IERR > 0) {

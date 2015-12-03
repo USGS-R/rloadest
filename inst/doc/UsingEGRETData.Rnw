@@ -145,18 +145,205 @@ dev.off()
 \includegraphics{graph04.pdf}
 \paragraph{}
 
-\textbf{Figure 4.} partial residual plots.
+\textbf{Figure 4.} Partial residual plots.
 
 \eject
 \section{Further Considerations}
 
-To be continued.
+Although not specifically stated by Runkel and others (2004), rloadest is designed to model constituent loads over time periods from about 2 to 10 years. The 2-year minimum is a practical limit based on a minimum number of samples required to build a good model. The 10-year period is based on the application by Cohn (personal communication, February 2006) for Chesapeake Bay load estimates. For time periods longer than about 10 years, both trends and the flow-concentration relation can require additional modeling tools (Vecchia, 2000). WRTDS accounts for those long-term changes by using locally weighted regression.
 
+To determine if there are unmodeled flow dependencies in the load model, the mean residual by water year can be compared to the mean flow by water year. The R code immediately following this paragraph computes those means and graphs the relation over time. There appears to be a strong correlation between the mean residual, in black, and the mean annual flow, in red. This relation is different from the relation between the residual and observed flow, which is correctly modeled as indicated by the partial residual plots.
+
+<<echo=TRUE>>=
+# Compute the mean residual and flow by water year
+MeanRes <- tapply(residuals(Chop.lr), waterYear(Chop.QW$Date), mean)
+MeanQ <- with(Chop.Q, tapply(LogQ, waterYear(Date), mean))
+# Get the years and convert the means to scaled vectors (for plotting)
+MeanWY <- as.integer(names(MeanQ))
+MeanRes <- as.vector(scale(MeanRes))
+MeanQ <- as.vector(scale(MeanQ))
+# Plot them
+setSweave("graph05", 6, 6)
+AA.pl <- timePlot(MeanWY, MeanRes, Plot=list(what="overlaid"),
+  yaxis.range=c(-2.5, 2.5))
+addXY(MeanWY, MeanQ, Plot=list(what="overlaid", color="red"),
+  current=AA.pl)
+dev.off()
+@
+\includegraphics{graph05.pdf}
+\paragraph{}
+
+\textbf{Figure 5.} Mean residuals and mean flow.
+
+Streamflow anomalies, described by Vecchia (2000), cannot be used directly in this model because it is a segmented model. For an example where flow anomalies can be used, see the \texttt{Application 3, Analysis of an Censored Constituent using a Seasonal Model}. For these data, a flow dependence can be computed that incorporates the average log flow for a previous period of time. The R code immediately following this paragraph, retrieves the flow data for 1 year prior to the beginning of the analysis period and computes the mean log flow for 3-, 6-, 9-, and 12-months. The \texttt{movingAve} function in \texttt{smwrBase} is used to compute those flow dependencies. The \texttt{mergeQ} function in \texttt{smwrBase} is used to extract the computed columns into the calibration dataset. The largest correlation between the residuals and the flow dependencies is the 3-month period, but the 12-month is nearly as large.
+
+<<echo=TRUE>>=
+# Retrieve the flow data , beginning 1978-10-01, and compute log flowe in cms
+Chop.ExQ <- renameNWISColumns(readNWISdv(
+  "01491000", "00060", "1978-10-01", "2011-09-30"))
+Chop.ExQ$LogQ <- log(Chop.ExQ$Flow/35.31467)
+# Compute the Dependencies
+Chop.ExQ <- transform(Chop.ExQ, 
+  Dep3mo=movingAve(LogQ, 91, pos="trailing"),
+  Dep6mo=movingAve(LogQ, 182, pos="trailing"),
+  Dep9mo=movingAve(LogQ, 273, pos="trailing"),
+  Dep12mo=movingAve(LogQ, 365, pos="trailing"))
+# Merge the dependencies into the calibration dataset
+Chop.ExQW <- mergeQ(Chop.QW, FLOW=c("Dep3mo", "Dep6mo", "Dep9mo", "Dep12mo"),
+  DATES="Date", Qdata=Chop.ExQ, Plot=FALSE)
+# Which has the largest correlation?
+cor(residuals(Chop.lr), Chop.ExQW[c("Dep3mo", "Dep6mo", "Dep9mo", "Dep12mo")])
+@
+
+One more consideration for factors that affect flow is the hysteresis in concentration between rising and falling flows. The \texttt{hysteresis} function in \texttt{smwrBase} can be used to construct a variable that can model differences in concentration between rising and falling limbs of the hydrograph. The R code immediately following this paragraph computes that hysteresis based on a 1 day time step, which would be appropriate for this small basin. The correlation is quite large, so it should be included in the model.
+
+<<echo=TRUE>>=
+# Compute the Hysterisis and merge into the new calibration data set
+Chop.ExQ <- transform(Chop.ExQ, Hy1=hysteresis(LogQ, 1))
+# Merge into the calibration dataset
+Chop.ExQW <- mergeQ(Chop.ExQW, FLOW="Hy1",
+  DATES="Date", Qdata=Chop.ExQ, Plot=FALSE)
+# Is it correlated with the residuals?
+cor(residuals(Chop.lr), Chop.ExQW$Hy1)
+@
+
+One final possibility, nonlinearities in the trend, must be considered. For some data the nonlinearities are very apparent, but they are more subtle for these data. There can be many approaches to describing the nonlinearities in trend: a second-order polynomial, using the \texttt{quadratic} function in \texttt{smwrBase}; higher-order polynomials using \texttt{poly} in \texttt{base}; piecewise linear terms using \texttt{trends} in \texttt{smwrStats}; and piecewise curvilinear terms using \texttt{curvi} in \texttt{smwrStats}. For most data, the partial residual plot over time would suggest any nonlinearity. Figure 6 shows that these data are very noisy, indicate very little deviation from a linear trend, but show the possibility of some leveling off in trend for a short period around 1995. Possible approaches for modeling the trend include piecewise linear with breaks around 1991 and 1998, curvilinear trends with midpoints at 1980 and 2010 with half-widths of 15 years (meeting in 1995), and a simple linear trend. For this example, the simple linear trend was selected because it was the simplest model,  the absolute values of the coefficient of variation of the jackknife bias were all less than 0.25, and had good performance on the bias statistics. The code for the jackknife estimates is shown in the box below, but not executed.
+
+\noindent\fbox{
+    \parbox{\textwidth}{
+\texttt{\# The simple linear trend}
+
+\texttt{jackStats(loadReg(Surv(ConcLow, ConcHigh, type="interval2") \~ }
+
+\texttt{segment(LogQ, 1.994) + DecYear + }
+
+\texttt{fourier(DecYear, 2) + Hy1 + Dep3mo,}
+
+\texttt{data=Chop.ExQW, flow="Q", dates="Date", conc.units="mg/L",}
+
+\texttt{flow.units="cms", station="Choptank"))}
+
+\texttt{\# The piecewise linear trend}
+
+\texttt{jackStats(loadReg(Surv(ConcLow, ConcHigh, type="interval2") \~ }
+
+\texttt{segment(LogQ, 1.994) + trends(DecYear, c(1991, 1998)) + }
+
+\texttt{fourier(DecYear, 2) + Hy1 + Dep3mo,}
+
+\texttt{data=Chop.ExQW, flow="Q", dates="Date", conc.units="mg/L",}
+
+\texttt{flow.units="cms", station="Choptank"))}
+
+\texttt{\# And the curvilinear trend}
+
+\texttt{jackStats(loadReg(Surv(ConcLow, ConcHigh, type="interval2") \~ }
+
+\texttt{segment(LogQ, 1.994) + curvi(DecYear, c(1980, 15, 2010, 15)) + }
+
+\texttt{fourier(DecYear, 2) + Hy1 + Dep3mo,}
+
+\texttt{data=Chop.ExQW, flow="Q", dates="Date", conc.units="mg/L",}
+
+\texttt{flow.units="cms", station="Choptank"))}
+    }
+}
+
+
+<<echo=TRUE>>=
+# Compute the extended load regression exluding time
+Chop.lrEx <- loadReg(Surv(ConcLow, ConcHigh, type="interval2") ~ 
+    segment(LogQ, 1.994) + 
+    fourier(DecYear, 2) + Hy1 + Dep3mo,
+  data=Chop.ExQW, flow="Q", dates="Date", conc.units="mg/L",
+  flow.units="cms", station="Choptank")
+# Use the functions in smwrGraphs to easily add the smooth line
+# Plot the residuals over time (decimal year) 
+# zooming in to the bulk of the residuals
+setSweave("graph06", 6, 6)
+AA.pl <- xyPlot(Chop.QW$DecYear, residuals(Chop.lrEx),
+  xtitle="Decimal Time", ytitle="Partial Residual",
+  yaxis.range=c(-1,1))
+# Add a smmothed line, setting family to "gaussian"--better for regression
+addSmooth(AA.pl, family="gaussian")
+dev.off()
+@
+\includegraphics{graph06.pdf}
+\paragraph{}
+
+\textbf{Figure 6.} The temporal residual trend with smoothed line.
+
+
+The extended model can now be built. The R code following this paragraph extends the model created in the previous section by adding hysteresis, the flow dependency terms, and the linear trend term. The printed result indicates that all terms, are significant at the 0.05 alpha level and the bias diagnostics indicate very good agreement between the observed and estimated loads. The diagnostic plots are not shown; the q-normal residual plot shows a lack of agreement with the normal distribution as indicated by the PPCC section of the report; the correlogram indicates serial correlation, which agrees with the printed report; and the partial residual plots show no issues, with the possible exception of some nonlinearity with the hysteresis term(Hy1).
+
+<<echo=TRUE>>=
+# Compute and print the Extended model
+Chop.lrEx <- loadReg(Surv(ConcLow, ConcHigh, type="interval2") ~ 
+    segment(LogQ, 1.994) + trends(DecYear, c(1991, 1998)) + 
+    fourier(DecYear, 2) + Hy1 + Dep3mo,
+  data=Chop.ExQW, flow="Q", dates="Date", conc.units="mg/L",
+  flow.units="cms", station="Choptank")
+print(Chop.lrEx)
+@
+
+\eject
+\section{WRTDS and rloadest Model Comparisons}
+
+A thorough comparison of the WRTDS and rloadest models is beyond the scope of this vignette, but it is possible to find some commonalities and differences between the models. The first step is top compute the residuals for the WRTDS model. For simplicity, the average concentration is used, which has very little effect for the one censored value. The R code following this paragraph computes the residuals and plots the water-year series of box plots for the WRTDS, modified, and extended load models.
+
+<<echo=TRUE>>=
+# Compute the WRTDS residuals and the water year
+Chop.QW <- transform(Chop.QW, Res=log(ConcAve) - yHat,
+                     WY=waterYear(Date, numeric=FALSE))
+# Graph the residuals
+setSweave("graph07", 6, 9)
+AA.lo <- setLayout(num.rows=3, shared.x=1)
+# The WRTDS residuals over time
+AA.mr <- setGraph(1, AA.lo)
+with(Chop.QW, boxPlot(Res, group=WY, Box=list(show.counts=FALSE),
+  yaxis.range=c(-1,1), xlabels.rotate=TRUE, margin=AA.mr))
+refLine(horizontal=0)
+addTitle(Main="WRTDS", Position="inside", Bold=FALSE)
+# Modified residuals over time
+AA.mr <- setGraph(2, AA.lo)
+with(Chop.QW, boxPlot(residuals(Chop.lr), group=WY, 
+  Box=list(show.counts=FALSE),
+  yaxis.range=c(-1,1), xlabels.rotate=TRUE, margin=AA.mr))
+refLine(horizontal=0)
+addTitle(Main="Modified", Position="inside", Bold=FALSE)
+# Extended residuals over time
+AA.mr <- setGraph(3, AA.lo)
+with(Chop.QW, boxPlot(residuals(Chop.lrEx), group=WY, 
+  Box=list(show.counts=FALSE),
+  yaxis.range=c(-1,1), xlabels.rotate=TRUE, margin=AA.mr))
+refLine(horizontal=0)
+addTitle(Main="Extended", Position="inside", Bold=FALSE)
+dev.off()
+@
+\includegraphics{graph07.pdf}
+\paragraph{}
+
+\textbf{Figure 7.} Residual box plots by water year for each of the models.
+
+The pattern of the boxes, or individual values when there are five or fewer values in a water year, are very similar---the medians and ranges of the boxes are generally in the same direction from the 0 line among the models. This suggests that the WRTDS and the load models are very similar in their description of the concentrations and loads. But there is one major difference--the residuals of the extended model are much closer to the 0 line than the other two. The number of cases where the box lies outside of the 0 line or all individual values lie on one side is 11 for the WRTDS model 1982, 1984, 1986, 1990, 1993, 1995, 1997, 2001, 2003, 2006, and 2007; 8 for the modified model  1982, 1984, 1985, 1990, 1993, 1995, 1997, and 2007; but only 2 for the extended model 1982 and 1993. That suggests that the addition of flow dependency and hysteresis reduced annual bias in the model. However, there remain persistent patterns of bias---for example the median residual is greater than 0 for all models from 1989 through 1993, suggesting that concentration or load estimates for that time could be biased and that the model could be improved.
+
+The extended load model uses 11 parameters: the intercept, three terms for flow, decimal time, four parameters for seasonality and the hysteresis and flow dependency terms. Cleveland and others (1996) describe a method to compute the equivalent number of parameters for local regression (the foundation for WRTDS). Applying their method to the WRTDS Choptank Nitrate plus Nitrite model results in the equivalent of 32.4 parameters, far more than were used in the extended load model.
+
+Concentration and load modeling is both art and science. The knowledge of water chemistry and an understanding of the dynamics of the hydrologic system are required to paint a picture of the concentration or load. WRTDS can be expected to produce a good and useful model, but with extra effort, the modeling capabilities in the \texttt{rloadest} package can yield a better understanding of the dynamics. The practitioner must balance needs and effort.
 
 \begin{thebibliography}{9}
 
+\bibitem{CGS}
+Cleveland, W.S., Grosse, E., and Shyu, M-J., 1996, A package of C and Fortran routines for fitting local regression models: Loess user's manual:Bell Labs, Technical Report. Available as PostScript report at http://www.stat.purdue.edu/~wsc/papers.html.
+
 \bibitem{HD}
 Hirsch, R.M. and De Cicco, L.A., 2015, User guide to Exploration and Graphics for RivEr Trends (EGRET) and dataRetrieval R for hydrologic data (version 2.0, February 2015): U.S. Geological Survey Techniques and Methods book 4, chap A10, 93 p. Available at http://dx.doi.org/10.3133/tm4A10.
+
+\bibitem{RCC}
+Runkel, R.L., Crawford, C.G., and Cohn, T.A., 2004, Load estimator (LOADEST): a FORTRAN program for estimating constituent loads in streams and rivers: U.S. Geological Survey Techniques and Methods book 4, chap. A5, 69 p.
+
+\bibitem{SV}
+Vecchia, A.V., 2000, Water-quality trend analysis and sampling design for the Souris River, Saskatchewan, North Dakota, and Manitoba: U.S. Geological Survey Water-Resources Investigations Report 00-4019, 77 p.
 
 \end{thebibliography}
 
