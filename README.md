@@ -15,7 +15,7 @@ Installation
 ----------
 
 ```r
-install.packages("rloadest", repos="http://owi.usgs.gov/R")
+install.packages("rloadest", repos=c("https://owi.usgs.gov/R","https://cloud.r-project.org"))
 ```
 
 Alternatively, add the owi repository to your R profile, and get automatic updates:
