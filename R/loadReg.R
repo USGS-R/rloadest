@@ -83,7 +83,7 @@ loadReg <- function(formula, data, subset, na.action, flow, dates,
     #terms above is null 
     #formulas were not being converted from symbols, and causing errors at ~127
     call$formula <- formula
-    m[['formula']] <- formula 
+    m[['formula']] <- formula
   }
   ## remove components not needed for model.frame
   m$flow <- m$dates  <- m$flow.units <- m$conc.units <- NULL
