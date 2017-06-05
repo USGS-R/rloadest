@@ -66,6 +66,11 @@ loadReg <- function(formula, data, subset, na.action, flow, dates,
     }
     return(retval)
   }
+  
+  #tbls will cause errors later - convert to standard data.frame
+  if(any(grepl(pattern = "tbl", x = class(data)))){
+    data <- data.frame(data)
+  }
   ##
   ## Trap model number specification
   PredMod <- terms(formula, "model", data = data)
