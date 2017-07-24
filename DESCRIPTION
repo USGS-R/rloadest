@@ -24,7 +24,8 @@ Imports:
 Suggests:
     dataRetrieval,
     EGRET,
-    survival
+    survival,
+    knitr
 LazyLoad: yes
 LazyData: yes
-RoxygenNote: 5.0.1
+RoxygenNote: 6.0.1

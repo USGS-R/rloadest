@@ -1,5 +1,5 @@
 #' @title Load Estimation
-#' 
+#'
 #' @description Select the "best" subset of a user-defined rating-curve (regression)
 #'model for rver load estimation.
 #'
@@ -11,23 +11,23 @@
 #' @param data the data to search for the variables in \code{formula}.
 #' @param subset an expression to select a subset of the data.
 #' @param na.action what to do with missing values.
-#' @param flow character string indicating the name of the 
+#' @param flow character string indicating the name of the
 #'flow column.
-#' @param dates character string indicating the name of the 
+#' @param dates character string indicating the name of the
 #'date column.
 #' @param flow.units character string describing the flow unit.
-#' @param conc.units character string describing the concentration 
+#' @param conc.units character string describing the concentration
 #'unit.
 #' @param load.units character string describing the load unit.
-#' @param time.step character string describing the time step of 
+#' @param time.step character string describing the time step of
 #'the calibration data.
 #' @param station character string description of the station.
-#' @param criterion the criterion to use for subset selection, must be 
+#' @param criterion the criterion to use for subset selection, must be
 #'one of "AIC," "SPCC," or "AICc."
 #'
 #' @seealso \code{\link{censReg}}, \code{\link[stats]{step}}
 #' @return An object of class "loadReg."
-#' @note The printed output of the model inlcudes the \code{anova} component from 
+#' @note The printed output of the model inlcudes the \code{anova} component from
 #'\code{step}. That table summarizes the step wise selection and the criterion used
 #'for each step. The statistics possibly represent a smaller  sample size than used
 #'for the final model because the \code{step} function requires a data set with no
@@ -35,9 +35,9 @@
 #' @importFrom stats step
 #' @keywords regression censored loads
 #' @export
-selBestSubset <- function(formula, min.formula=~1, data, subset, na.action, flow, 
+selBestSubset <- function(formula, min.formula=~1, data, subset, na.action, flow,
 													dates, flow.units = "cfs", conc.units = "", load.units = "kg",
-													time.step = "day", station = "", 
+													time.step = "day", station = "",
                           criterion=c("AIC", "SPCC", "AICc")) {
 	# First extract the call to construct a data frame for the model
 	criterion <- match.arg(criterion)
@@ -65,7 +65,7 @@ selBestSubset <- function(formula, min.formula=~1, data, subset, na.action, flow
 		if (conc.units == "") {
 			conc.units <- unique(df[[1L]]@reporting.units)
 			conc.units <- conc.units[!is.na(conc.units)]
-			if (length(conc.units) == 0L) 
+			if (length(conc.units) == 0L)
 				conc.units <- ""
 			else if (length(conc.units) > 1L) {
 				lens <- nchar(conc.units)
@@ -103,8 +103,9 @@ selBestSubset <- function(formula, min.formula=~1, data, subset, na.action, flow
 	m <- eval(m)
 	## Warn if fewer N than 10*potential params
 	if(m$NOBSC < 10L * (m$NPAR - 1L))
-	  warning("Selected model may be over fit: only ", 
+	  warning("Selected model may be over fit: only ",
 	          m$NOBSC, " observations for ", m$NPAR, " possible parameters.")
+
   best <- step(m, scope=min.formula, direction="both", trace=0, k=k, correct=correct)
 	# retain the step wise model selections
 	model.eval <- best$anova
@@ -118,4 +119,4 @@ selBestSubset <- function(formula, min.formula=~1, data, subset, na.action, flow
 	retval$model.eval <- model.eval
 	return(retval)
 }
- 
+
