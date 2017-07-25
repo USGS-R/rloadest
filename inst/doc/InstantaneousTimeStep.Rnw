@@ -4,7 +4,14 @@
 %\VignetteDepends{rloadest}
 
 \begin{document}
-\SweaveOpts{concordance=TRUE}
+
+<<include=FALSE>>=
+library(knitr)
+opts_chunk$set(
+concordance=TRUE
+)
+@
+
 \raggedright
 
 \title{Instantaneous Time-Step Model}
@@ -23,10 +30,10 @@ This example uses data from the Bad River near Odanah, Wisc., USGS gaging statio
 library(rloadest)
 library(dataRetrieval)
 # What unit values are available?
-subset(whatNWISdata("04027000", "uv"),
-  select=c("parm_cd", "srsname", "begin_date", "end_date"))
+subset(whatNWISdata("04027000"), data_type_cd=="uv",
+   select=c("parm_cd", "srsname", "begin_date", "end_date"))
 # Get the QW data
-BadQW <- importNWISqw("04027000", "00940", 
+BadQW <- importNWISqw("04027000", "00940",
   begin.date="2011-04-01", end.date="2014-09-30")
 # Merge data and time and set timezone (2 steps)
 BadQW <- transform(BadQW, dateTime=sample_dt + as.timeDay(sample_tm))
@@ -42,7 +49,7 @@ names(BadUV) <- sub("_Inst", "", names(BadUV))
 BadData <- mergeNearest(BadQW, "dateTime", right=BadUV, dates.right="dateTime",
   max.diff="4 hours")
 # Rename the left-hand dateTime column
-names(BadData)[9] <- "dateTime"
+names(BadData)[which(names(BadData)=='dateTime.left')] <- "dateTime"
 @
 
 \eject
@@ -58,10 +65,10 @@ sapply(BadData, function(col) sum(is.na(col)))
 This example will include the other surrogates and flow and seasonal terms in the candidate model. The code below demonstrates the use of \texttt{selBestSubset} to select the initial candidate model.
 
 <<echo=TRUE>>=
-# Create the and print the candidate model.
-BadChloride.lr <- selBestSubset(Chloride ~ log(Flow) + fourier(dateTime) + 
+# Create and print the candidate model.
+BadChloride.lr <- selBestSubset(Chloride ~ log(Flow) + fourier(dateTime) +
   log(SpecCond) + log(DO) + log(Turb), data=BadData,
-  flow="Flow", dates="dateTime", time.step="instantaneous", 
+  flow="Flow", dates="dateTime", time.step="instantaneous",
   station="Bad River near Odanah", criterion="SPCC")
 
 print(BadChloride.lr)
@@ -112,9 +119,9 @@ Build the model excluding \texttt{log(DO)} that was dropped in the subset select
 
 <<echo=TRUE>>=
 # Create the and print the revised model.
-BadChloride.lr <- loadReg(Chloride ~ log(Flow) + fourier(dateTime) + 
+BadChloride.lr <- loadReg(Chloride ~ log(Flow) + fourier(dateTime) +
   log(SpecCond) + Turb, data=BadData,
-  flow="Flow", dates="dateTime", time.step="instantaneous", 
+  flow="Flow", dates="dateTime", time.step="instantaneous",
   station="Bad River near Odanah")
 
 print(BadChloride.lr, load.only=FALSE)
@@ -163,7 +170,7 @@ dev.off()
 \textbf{Figure 6.} The residual Q-normal graph for the revised model.
 
 
-A complete review of the partial residual graphs is not included in this example. Only the partial residual for \texttt{Turb} is shown to compare to the original model. In this case, the untransformed variable appears to fit reasonably well. 
+A complete review of the partial residual graphs is not included in this example. Only the partial residual for \texttt{Turb} is shown to compare to the original model. In this case, the untransformed variable appears to fit reasonably well.
 
 <<echo=TRUE>>=
 # Plot the residual Q-normal graph.
