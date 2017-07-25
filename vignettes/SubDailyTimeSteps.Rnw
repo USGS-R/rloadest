@@ -150,6 +150,8 @@ BrushyQ <- readNWISuv(Brushy, "00060", startDate="2013-05-01",
   endDate="2013-05-31", tz="America/New_York")
 # Rename the Flow column, must be done manually as renameNWISColumns
 # appends _Inst
+# Detect the Flow column position based on the expectation
+# that it will be numeric
 flowColumn <- seq(4, 6, 1)[
                 which.min(lapply(BrushyQ[,4:6],
                   function(x) sum(is.na(as.numeric(x)))))]
