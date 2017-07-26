@@ -1,16 +1,7 @@
 ### R code from vignette source 'InstantaneousTimeStep.Rnw'
 
 ###################################################
-### code chunk number 1: InstantaneousTimeStep.Rnw:8-12
-###################################################
-library(knitr)
-opts_chunk$set(
-concordance=TRUE
-)
-
-
-###################################################
-### code chunk number 2: InstantaneousTimeStep.Rnw:28-52
+### code chunk number 1: InstantaneousTimeStep.Rnw:23-47
 ###################################################
 # Load the necessary packages and the data
 library(rloadest)
@@ -39,14 +30,14 @@ names(BadData)[which(names(BadData)=='dateTime.left')] <- "dateTime"
 
 
 ###################################################
-### code chunk number 3: InstantaneousTimeStep.Rnw:60-62
+### code chunk number 2: InstantaneousTimeStep.Rnw:55-57
 ###################################################
 # Print the number of missing values in each column
 sapply(BadData, function(col) sum(is.na(col)))
 
 
 ###################################################
-### code chunk number 4: InstantaneousTimeStep.Rnw:67-74
+### code chunk number 3: InstantaneousTimeStep.Rnw:62-69
 ###################################################
 # Create and print the candidate model.
 BadChloride.lr <- selBestSubset(Chloride ~ log(Flow) + fourier(dateTime) +
@@ -58,7 +49,7 @@ print(BadChloride.lr)
 
 
 ###################################################
-### code chunk number 5: InstantaneousTimeStep.Rnw:81-85
+### code chunk number 4: InstantaneousTimeStep.Rnw:76-80
 ###################################################
 # Plot the overall fit, choose plot number 2.
 setSweave("graph01", 6, 6)
@@ -67,7 +58,7 @@ dev.off()
 
 
 ###################################################
-### code chunk number 6: InstantaneousTimeStep.Rnw:94-98
+### code chunk number 5: InstantaneousTimeStep.Rnw:89-93
 ###################################################
 # Plot the residual Q-normal graph.
 setSweave("graph02", 6, 6)
@@ -76,7 +67,7 @@ dev.off()
 
 
 ###################################################
-### code chunk number 7: InstantaneousTimeStep.Rnw:107-111
+### code chunk number 6: InstantaneousTimeStep.Rnw:102-106
 ###################################################
 # Plot the residual Q-normal graph.
 setSweave("graph03", 6, 6)
@@ -85,7 +76,7 @@ dev.off()
 
 
 ###################################################
-### code chunk number 8: InstantaneousTimeStep.Rnw:120-127
+### code chunk number 7: InstantaneousTimeStep.Rnw:115-122
 ###################################################
 # Create the and print the revised model.
 BadChloride.lr <- loadReg(Chloride ~ log(Flow) + fourier(dateTime) +
@@ -97,7 +88,7 @@ print(BadChloride.lr, load.only=FALSE)
 
 
 ###################################################
-### code chunk number 9: InstantaneousTimeStep.Rnw:135-139
+### code chunk number 8: InstantaneousTimeStep.Rnw:130-134
 ###################################################
 # Plot the overall fit, choose plot number 2.
 setSweave("graph04", 6, 6)
@@ -106,7 +97,7 @@ dev.off()
 
 
 ###################################################
-### code chunk number 10: InstantaneousTimeStep.Rnw:148-152
+### code chunk number 9: InstantaneousTimeStep.Rnw:143-147
 ###################################################
 # Plot the S-L grpah.
 setSweave("graph05", 6, 6)
@@ -115,7 +106,7 @@ dev.off()
 
 
 ###################################################
-### code chunk number 11: InstantaneousTimeStep.Rnw:161-165
+### code chunk number 10: InstantaneousTimeStep.Rnw:156-160
 ###################################################
 # Plot the residual Q-normal graph.
 setSweave("graph06", 6, 6)
@@ -124,7 +115,7 @@ dev.off()
 
 
 ###################################################
-### code chunk number 12: InstantaneousTimeStep.Rnw:175-179
+### code chunk number 11: InstantaneousTimeStep.Rnw:170-174
 ###################################################
 # Plot the residual Q-normal graph.
 setSweave("graph07", 6, 6)
@@ -133,7 +124,7 @@ dev.off()
 
 
 ###################################################
-### code chunk number 13: InstantaneousTimeStep.Rnw:193-209
+### code chunk number 12: InstantaneousTimeStep.Rnw:188-204
 ###################################################
 # Extract one day from the UV data
 Bad063014 <- subset(BadUV, as.Date(as.POSIXlt(dateTime)) == "2014-06-30")
@@ -154,7 +145,7 @@ with(Bad063014.est, mean(Conc))
 
 
 ###################################################
-### code chunk number 14: InstantaneousTimeStep.Rnw:221-248
+### code chunk number 13: InstantaneousTimeStep.Rnw:216-243
 ###################################################
 # Extract one month from the UV data, done in two steps
 Bad0714 <- subset(BadUV, as.Date(as.POSIXlt(dateTime)) >= "2014-07-01")
