@@ -35,6 +35,8 @@ We want to encourage a warm, welcoming, and safe environment for contributing to
 ## Package Installation
 To install the `rloadest` package:
 
+USGS R Installation Instructions: [https://owi.usgs.gov/R/training-curriculum/installr/](https://owi.usgs.gov/R/training-curriculum/installr/)
+
 1. Install R (version 3.0 or greater) from: [https://cran.r-project.org/](https://cran.r-project.org/)
 
 2. Install RStudio from: [https://www.rstudio.com/products/rstudio/download/](https://www.rstudio.com/products/rstudio/download/)
