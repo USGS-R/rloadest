@@ -30,8 +30,8 @@ This example uses data from the Bad River near Odanah, Wisc., USGS gaging statio
 library(rloadest)
 library(dataRetrieval)
 # What unit values are available?
-subset(whatNWISdata("04027000"), data_type_cd=="uv",
-   select=c("parm_cd", "srsname", "begin_date", "end_date"))
+subset(whatNWISdata(siteNumber = "04027000"), data_type_cd=="uv",
+   select=c("parm_cd", "begin_date", "end_date"))
 # Get the QW data
 BadQW <- importNWISqw("04027000", "00940",
   begin.date="2011-04-01", end.date="2014-09-30")

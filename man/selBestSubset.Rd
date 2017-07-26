@@ -22,25 +22,25 @@ acceptable. In some rare cases, the log of flow may be needed.}
 
 \item{na.action}{what to do with missing values.}
 
-\item{flow}{character string indicating the name of the 
+\item{flow}{character string indicating the name of the
 flow column.}
 
-\item{dates}{character string indicating the name of the 
+\item{dates}{character string indicating the name of the
 date column.}
 
 \item{flow.units}{character string describing the flow unit.}
 
-\item{conc.units}{character string describing the concentration 
+\item{conc.units}{character string describing the concentration
 unit.}
 
 \item{load.units}{character string describing the load unit.}
 
-\item{time.step}{character string describing the time step of 
+\item{time.step}{character string describing the time step of
 the calibration data.}
 
 \item{station}{character string description of the station.}
 
-\item{criterion}{the criterion to use for subset selection, must be 
+\item{criterion}{the criterion to use for subset selection, must be
 one of "AIC," "SPCC," or "AICc."}
 }
 \value{
@@ -51,7 +51,7 @@ Select the "best" subset of a user-defined rating-curve (regression)
 model for rver load estimation.
 }
 \note{
-The printed output of the model inlcudes the \code{anova} component from 
+The printed output of the model inlcudes the \code{anova} component from
 \code{step}. That table summarizes the step wise selection and the criterion used
 for each step. The statistics possibly represent a smaller  sample size than used
 for the final model because the \code{step} function requires a data set with no
