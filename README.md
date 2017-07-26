@@ -21,6 +21,7 @@ Please consider reporting bugs and asking questions on the Issues page:
 [https://github.com/USGS-R/rloadest/issues](https://github.com/USGS-R/rloadest/issues)
 
 Follow `@USGS-R` on Twitter for updates on USGS R packages:
+
 [https://twitter.com/USGS_R](https://twitter.com/USGS_R)
 
 ### Current build tests:
