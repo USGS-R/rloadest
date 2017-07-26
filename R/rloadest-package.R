@@ -41,7 +41,7 @@ neither the USGS nor the U.S. Government shall be held
 liable for any damages resulting from the authorized
 or unauthorized use of the information.
 
-This package is currently in an 'orphaned' state, and
-looking for a new maintainer. For more information, see:
-https://owi.usgs.gov/R/packages.html#orphan")
+****Orphaned Package****
+This package is looking for a new maintainer. For more information, 
+see: https://owi.usgs.gov/R/packages.html#orphan")
 }
