@@ -7,7 +7,12 @@
 %\VignetteDepends{rloadest}
 
 \begin{document}
-\SweaveOpts{concordance=TRUE}
+<<include=FALSE>>=
+library(knitr)
+opts_chunk$set(
+concordance=TRUE
+)
+@
 \raggedright
 
 \title{Subdaily Time-Step Models}
@@ -39,7 +44,7 @@ Brushy <- "02207400"
 # Parameter code 00061 is the measured streamflow
 # 71123 will be used as the flow for peak flows and 00061
 # for base flow or 00060 if 00061 is missing.
-BrushyQW <- importNWISqw("02207400", 
+BrushyQW <- importNWISqw("02207400",
   params=c("00625", "72123", "00060", "00061"),
   begin.date="2004-10-02", end.date="2013-09-30")
 # Convert the separate columns of dates and times to a single column
@@ -63,7 +68,7 @@ There is no set method to determine the time step. The approach should determine
 # Compute the median peak duration.
 with(BrushyQW, median(EndDateTime - StartDateTime, na.rm=T))
 # Compute the sample date and time
-BrushyQW <- transform(BrushyQW, 
+BrushyQW <- transform(BrushyQW,
   dateTime=ifelse(is.na(EndDateTime), StartDateTime,
     StartDateTime + (EndDateTime - StartDateTime)/2))
 # Need to convert to POSIXct. Note that the original data were
@@ -72,7 +77,7 @@ BrushyQW <- transform(BrushyQW,
 BrushyQW <- transform(BrushyQW, dateTime=as.POSIXct(dateTime,
   origin="1970-01-01", tz="America/Jamaica"))
 # Now the flow, coalesce is in smwrBase
-BrushyQW <- transform(BrushyQW, 
+BrushyQW <- transform(BrushyQW,
   Flow=ifelse(!is.na(EndDateTime), DischargeMeanStorm_cfs,
   coalesce(InstDischarge_cfs, Discharge_cfs)))
 @
@@ -141,11 +146,12 @@ Load estimation can easily be done using unit-value data, rather than the user a
 
 <<echo=TRUE>>=
 # Get the data for May, 2013
-BrushyQ <- readNWISuv(Brushy, "00060", startDate="2013-05-01", 
+BrushyQ <- readNWISuv(Brushy, "00060", startDate="2013-05-01",
   endDate="2013-05-31", tz="America/New_York")
+BrushyQ <- renameNWISColumns(BrushyQ)
 # Rename the Flow column, must be done manually as renameNWISColumns
 # appends _Inst
-names(BrushyQ)[5] <- "Flow"
+names(BrushyQ)[names(BrusyQ) == "Flow_Inst"] <- "Flow"
 # Show the gap in the record:
 BrushyQ[2030:2040,]
 # predict the load
@@ -156,10 +162,10 @@ predLoad(Brushy.lreg, BrushyQ, by="month")
 
 \bibitem{Jo}
 Joiner, J.K., Aulenbach, B.T., and Landers, M.N., 2014, Watershed characteristics and water-quality trends and loads in 12 watersheds in Gwinnett County, Georgia: U.S. Geological Survey Scientific Investigations Report 2014-5141,
-79 p., http://dx.doi.org/10.3133/sir20145141.
+79 p., https://dx.doi.org/10.3133/sir20145141.
 
 \bibitem{Lo}
-Landers, M.N., Ankcorn, P.D., and McFadden, K.W., 2007, Watershed effects on streamflow quantity and quality in six watersheds of Gwinnett Count, Georgia: U.S. Geological Survey Scientific Investigations Report 2007-5132, 62 p., Web-only publication at http://pubs.usgs.gov/sir/2007/5132/
+Landers, M.N., Ankcorn, P.D., and McFadden, K.W., 2007, Watershed effects on streamflow quantity and quality in six watersheds of Gwinnett Count, Georgia: U.S. Geological Survey Scientific Investigations Report 2007-5132, 62 p., Web-only publication at https://pubs.usgs.gov/sir/2007/5132/
 
 \end{thebibliography}
 

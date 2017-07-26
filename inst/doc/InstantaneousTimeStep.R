@@ -1,16 +1,25 @@
 ### R code from vignette source 'InstantaneousTimeStep.Rnw'
 
 ###################################################
-### code chunk number 1: InstantaneousTimeStep.Rnw:21-45
+### code chunk number 1: InstantaneousTimeStep.Rnw:8-12
+###################################################
+library(knitr)
+opts_chunk$set(
+concordance=TRUE
+)
+
+
+###################################################
+### code chunk number 2: InstantaneousTimeStep.Rnw:28-52
 ###################################################
 # Load the necessary packages and the data
 library(rloadest)
 library(dataRetrieval)
 # What unit values are available?
-subset(whatNWISdata("04027000", "uv"),
-  select=c("parm_cd", "srsname", "begin_date", "end_date"))
+subset(whatNWISdata("04027000"), data_type_cd=="uv",
+   select=c("parm_cd", "srsname", "begin_date", "end_date"))
 # Get the QW data
-BadQW <- importNWISqw("04027000", "00940", 
+BadQW <- importNWISqw("04027000", "00940",
   begin.date="2011-04-01", end.date="2014-09-30")
 # Merge data and time and set timezone (2 steps)
 BadQW <- transform(BadQW, dateTime=sample_dt + as.timeDay(sample_tm))
@@ -26,30 +35,30 @@ names(BadUV) <- sub("_Inst", "", names(BadUV))
 BadData <- mergeNearest(BadQW, "dateTime", right=BadUV, dates.right="dateTime",
   max.diff="4 hours")
 # Rename the left-hand dateTime column
-names(BadData)[9] <- "dateTime"
+names(BadData)[which(names(BadData)=='dateTime.left')] <- "dateTime"
 
 
 ###################################################
-### code chunk number 2: InstantaneousTimeStep.Rnw:53-55
+### code chunk number 3: InstantaneousTimeStep.Rnw:60-62
 ###################################################
 # Print the number of missing values in each column
 sapply(BadData, function(col) sum(is.na(col)))
 
 
 ###################################################
-### code chunk number 3: InstantaneousTimeStep.Rnw:60-67
+### code chunk number 4: InstantaneousTimeStep.Rnw:67-74
 ###################################################
-# Create the and print the candidate model.
-BadChloride.lr <- selBestSubset(Chloride ~ log(Flow) + fourier(dateTime) + 
+# Create and print the candidate model.
+BadChloride.lr <- selBestSubset(Chloride ~ log(Flow) + fourier(dateTime) +
   log(SpecCond) + log(DO) + log(Turb), data=BadData,
-  flow="Flow", dates="dateTime", time.step="instantaneous", 
+  flow="Flow", dates="dateTime", time.step="instantaneous",
   station="Bad River near Odanah", criterion="SPCC")
 
 print(BadChloride.lr)
 
 
 ###################################################
-### code chunk number 4: InstantaneousTimeStep.Rnw:74-78
+### code chunk number 5: InstantaneousTimeStep.Rnw:81-85
 ###################################################
 # Plot the overall fit, choose plot number 2.
 setSweave("graph01", 6, 6)
@@ -58,7 +67,7 @@ dev.off()
 
 
 ###################################################
-### code chunk number 5: InstantaneousTimeStep.Rnw:87-91
+### code chunk number 6: InstantaneousTimeStep.Rnw:94-98
 ###################################################
 # Plot the residual Q-normal graph.
 setSweave("graph02", 6, 6)
@@ -67,7 +76,7 @@ dev.off()
 
 
 ###################################################
-### code chunk number 6: InstantaneousTimeStep.Rnw:100-104
+### code chunk number 7: InstantaneousTimeStep.Rnw:107-111
 ###################################################
 # Plot the residual Q-normal graph.
 setSweave("graph03", 6, 6)
@@ -76,19 +85,19 @@ dev.off()
 
 
 ###################################################
-### code chunk number 7: InstantaneousTimeStep.Rnw:113-120
+### code chunk number 8: InstantaneousTimeStep.Rnw:120-127
 ###################################################
 # Create the and print the revised model.
-BadChloride.lr <- loadReg(Chloride ~ log(Flow) + fourier(dateTime) + 
+BadChloride.lr <- loadReg(Chloride ~ log(Flow) + fourier(dateTime) +
   log(SpecCond) + Turb, data=BadData,
-  flow="Flow", dates="dateTime", time.step="instantaneous", 
+  flow="Flow", dates="dateTime", time.step="instantaneous",
   station="Bad River near Odanah")
 
 print(BadChloride.lr, load.only=FALSE)
 
 
 ###################################################
-### code chunk number 8: InstantaneousTimeStep.Rnw:128-132
+### code chunk number 9: InstantaneousTimeStep.Rnw:135-139
 ###################################################
 # Plot the overall fit, choose plot number 2.
 setSweave("graph04", 6, 6)
@@ -97,7 +106,7 @@ dev.off()
 
 
 ###################################################
-### code chunk number 9: InstantaneousTimeStep.Rnw:141-145
+### code chunk number 10: InstantaneousTimeStep.Rnw:148-152
 ###################################################
 # Plot the S-L grpah.
 setSweave("graph05", 6, 6)
@@ -106,7 +115,7 @@ dev.off()
 
 
 ###################################################
-### code chunk number 10: InstantaneousTimeStep.Rnw:154-158
+### code chunk number 11: InstantaneousTimeStep.Rnw:161-165
 ###################################################
 # Plot the residual Q-normal graph.
 setSweave("graph06", 6, 6)
@@ -115,7 +124,7 @@ dev.off()
 
 
 ###################################################
-### code chunk number 11: InstantaneousTimeStep.Rnw:168-172
+### code chunk number 12: InstantaneousTimeStep.Rnw:175-179
 ###################################################
 # Plot the residual Q-normal graph.
 setSweave("graph07", 6, 6)
@@ -124,7 +133,7 @@ dev.off()
 
 
 ###################################################
-### code chunk number 12: InstantaneousTimeStep.Rnw:186-202
+### code chunk number 13: InstantaneousTimeStep.Rnw:193-209
 ###################################################
 # Extract one day from the UV data
 Bad063014 <- subset(BadUV, as.Date(as.POSIXlt(dateTime)) == "2014-06-30")
@@ -145,7 +154,7 @@ with(Bad063014.est, mean(Conc))
 
 
 ###################################################
-### code chunk number 13: InstantaneousTimeStep.Rnw:214-241
+### code chunk number 14: InstantaneousTimeStep.Rnw:221-248
 ###################################################
 # Extract one month from the UV data, done in two steps
 Bad0714 <- subset(BadUV, as.Date(as.POSIXlt(dateTime)) >= "2014-07-01")
