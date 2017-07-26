@@ -148,14 +148,10 @@ Load estimation can easily be done using unit-value data, rather than the user a
 # Get the data for May, 2013
 BrushyQ <- readNWISuv(Brushy, "00060", startDate="2013-05-01",
   endDate="2013-05-31", tz="America/New_York")
+BrushyQ <- renameNWISColumns(BrushyQ)
 # Rename the Flow column, must be done manually as renameNWISColumns
 # appends _Inst
-# Detect the Flow column position based on the expectation
-# that it will be numeric
-flowColumn <- seq(4, 6, 1)[
-                which.min(lapply(BrushyQ[,4:6],
-                  function(x) sum(is.na(as.numeric(x)))))]
-names(BrushyQ)[flowColumn] <- "Flow"
+names(BrushyQ)[names(BrusyQ) == "Flow_Inst"] <- "Flow"
 # Show the gap in the record:
 BrushyQ[2030:2040,]
 # predict the load
@@ -166,10 +162,10 @@ predLoad(Brushy.lreg, BrushyQ, by="month")
 
 \bibitem{Jo}
 Joiner, J.K., Aulenbach, B.T., and Landers, M.N., 2014, Watershed characteristics and water-quality trends and loads in 12 watersheds in Gwinnett County, Georgia: U.S. Geological Survey Scientific Investigations Report 2014-5141,
-79 p., http://dx.doi.org/10.3133/sir20145141.
+79 p., https://dx.doi.org/10.3133/sir20145141.
 
 \bibitem{Lo}
-Landers, M.N., Ankcorn, P.D., and McFadden, K.W., 2007, Watershed effects on streamflow quantity and quality in six watersheds of Gwinnett Count, Georgia: U.S. Geological Survey Scientific Investigations Report 2007-5132, 62 p., Web-only publication at http://pubs.usgs.gov/sir/2007/5132/
+Landers, M.N., Ankcorn, P.D., and McFadden, K.W., 2007, Watershed effects on streamflow quantity and quality in six watersheds of Gwinnett Count, Georgia: U.S. Geological Survey Scientific Investigations Report 2007-5132, 62 p., Web-only publication at https://pubs.usgs.gov/sir/2007/5132/
 
 \end{thebibliography}
 
