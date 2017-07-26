@@ -17,7 +17,7 @@ In the meantime, we rely on community involvement to report and fix bugs. Please
 ### Current build tests:
 
 |Linux|Test Coverage|
-|----------|------------|------------|
+|----------|------------|
 | [![travis](https://travis-ci.org/USGS-R/rloadest.svg?branch=master)](https://travis-ci.org/USGS-R/rloadest)||[![Coverage Status](https://coveralls.io/repos/github/USGS-R/rloadest/badge.svg?branch=master)](https://coveralls.io/github/USGS-R/rloadest?branch=master)|
 
 ## Code of Conduct
