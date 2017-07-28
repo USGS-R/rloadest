@@ -8,8 +8,6 @@
 \tabular{ll}{
 Package: \tab rloadest\cr
 Type: \tab Package\cr
-Version: \tab 0.4.3\cr
-Date: \tab 2015-12-03\cr
 License: \tab CC0\cr
 LazyLoad: \tab yes\cr
 }
@@ -34,9 +32,6 @@ the printed output from LOADEST.
 
 Furthermore, the model building capability in the rloadest functions make easier
 to explore other forms of rating-curve models than LOADEST.
-}
-\author{
-Dave Lorenz \email{lorenz@usgs.gov}
 }
 \keyword{estimation}
 \keyword{load}

@@ -1,13 +1,13 @@
 Package: rloadest
 Type: Package
 Title: River Load Estimation
-Version: 0.4.4
-Date: 2017-01-10
-Authors@R: c( person("Dave", "Lorenz", email = "lorenz@usgs.gov", role = "cre"),
+Version: 0.4.5
+Date: 2017-07-26
+Authors@R: c( person("Dave", "Lorenz", role = "cre", email = "gs-w_r_admin@usgs.gov"),
               person("Rob", "Runkel", role = "aut"),
               person("Laura", "De Cicco", role = "aut"), 
-              person("David", "Watkins", role = "ctb"))
-Maintainer: Dave Lorenz <lorenz@usgs.gov>
+              person("David", "Watkins", role = "ctb"),
+              person("Joseph", "Stachelek", role = "ctb"))
 Description: Collection of functions to make constituent load estimations
     based on the LOADEST program.
 License: CC0
@@ -26,6 +26,7 @@ Suggests:
     EGRET,
     survival,
     knitr
+BugReports: https://github.com/USGS-R/rloadest/issues
 LazyLoad: yes
 LazyData: yes
 RoxygenNote: 6.0.1

@@ -20,7 +20,7 @@ Data frame with 13 rows and 3 columns\cr
 }
 \source{
 Retrieved from NWISweb on July 26, 2013 from URL:
-\url{http://nwis.waterdata.usgs.gov/ks/nwis/qwdata}
+\url{https://nwis.waterdata.usgs.gov/ks/nwis/qwdata}
 }
 \examples{
 data(app5.1999)
