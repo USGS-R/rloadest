@@ -25,7 +25,8 @@ Suggests:
     dataRetrieval,
     EGRET,
     survival,
-    knitr
+    knitr,
+    testthat
 BugReports: https://github.com/USGS-R/rloadest/issues
 LazyLoad: yes
 LazyData: yes
