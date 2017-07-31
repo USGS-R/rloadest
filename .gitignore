@@ -3,3 +3,6 @@ src-x64
 .Rproj.user
 .Rhistory
 .RData
+*.Rproj
+src/*.o
+src/*.dll

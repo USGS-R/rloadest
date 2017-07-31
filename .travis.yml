@@ -36,8 +36,8 @@ warnings_are_errors: true
 
 script: 
   - |
-    R CMD build .
-    travis_wait 20 R CMD check rloadest*tar.gz
+    R CMD build ${R_BUILD_ARGS} .
+    travis_wait 20 R CMD check ${R_CHECK_ARGS} rloadest*tar.gz
 
 r_github_packages:
   - jimhester/covr
