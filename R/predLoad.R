@@ -64,9 +64,11 @@ predLoad <- function(fit, newdata, load.units=fit$load.units, by="total",
   ##    2014Sep23 DLLorenz Missing check on newdata
   ##
   ## By options and other preliminary code
-  if(nrow(newdata) > 176000L)
+  if(nrow(newdata) > 176000L) {
     stop("newdata has too many rows, the size limit is 176000")
+  }
   ByOpt <- c("unit", "day", "month", "water year", "calendar year", "total")
+  match.arg(by, ByOpt)
   load.units
   seopt <- match.arg(seopt, c("exact", "approximate"))
   Qadj <- fit$Qadj

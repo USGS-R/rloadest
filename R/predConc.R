@@ -43,13 +43,17 @@
 #' @export
 predConc <- function(fit, newdata, by="day", 
                      allow.incomplete=FALSE, conf.int=0.95) {
-  ##
+  
   ## By options and other preliminary code
-  if(is.null(fit$cfit))
+  if(is.null(fit$cfit)) {
     stop("model cannot predict concentration values")
-  if(nrow(newdata) > 176000L)
+  }
+    
+  if(nrow(newdata) > 176000L) {
     stop("newdata has too many rows, the size limit is 176000")
+  }
   ByOpt <- c("unit", "day")
+  match.arg('by', ByOpt)
   Qadj <- fit$Qadj
   Tadj <- fit$Tadj
   flow <- fit$flow
