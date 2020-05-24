@@ -7,10 +7,10 @@ USGS water science R functions for LOAD ESTimation of constituents in rivers and
 [![status](https://img.shields.io/badge/USGS-Orphan-red.svg)](https://owi.usgs.gov/R/packages.html#orphan)
 
 This package is currently in an 'orphaned' state, and
-looking for a new maintainer. For more information, see:
+looking for a new sponser and maintainer. For more information, see:
 [https://owi.usgs.gov/R/packages.html#orphan](https://owi.usgs.gov/R/packages.html#orphan)
 
-If you are interested in becoming the official maintainer of `rloadest`, please email gs-w_r_admin@usgs.gov.
+If you are interested in becoming the official sponser and maintainer of `rloadest`, please email gs-w_r_admin@usgs.gov.
 
 In the meantime, we rely on community involvement to report and fix bugs.
 
@@ -35,42 +35,16 @@ Follow `@USGS_R` on Twitter for updates on USGS R packages:
 We want to encourage a warm, welcoming, and safe environment for contributing to this project. See the [code of conduct](https://github.com/USGS-R/rloadest/blob/master/CONDUCT.md) for more information.
 
 ## Package Installation
-To install the `rloadest` package:
+To install the `rloadest` package, first install the "remotes" package. Then, using the remotes package, install "smwrData", "smwrBase", "smwrGraphs", "smwrStats", and "smwrQW":
 
-USGS R Installation Instructions: [https://owi.usgs.gov/R/training-curriculum/installr/](https://owi.usgs.gov/R/training-curriculum/installr/)
-
-1. Install R (version 3.0 or greater) from: [https://cran.r-project.org/](https://cran.r-project.org/)
-
-2. Install RStudio from: [https://www.rstudio.com/products/rstudio/download/](https://www.rstudio.com/products/rstudio/download/)
-
-3. Add the USGS R repository to your "Rprofile" to get automatic updates. Run the following code:
-  
-  ```r
-  rprofile_path = file.path(Sys.getenv("HOME"), ".Rprofile")
-  write('\noptions(repos=c(getOption(\'repos\'),
-    CRAN=\'https://cloud.r-project.org\',
-    USGS=\'https://owi.usgs.gov/R\'))\n',
-      rprofile_path, 
-      append =  TRUE)
-
-  cat('Your Rprofile has been updated to include GRAN.
-    Please restart R for changes to take effect.')
-  ```
-
-4. Restart R!
-
-5. In the RStudio "Console" window (usually left or lower-left), run the following command:
-
-  ```r
-  install.packages("rloadest")
-  ```
-  
-
-6. Update often. Next time you update your packages, `rloadest` will automatically update:
-
-   ![update](images/update.png)
-
-7. Make sure to keep your version of R up-to-date. CRAN and the USGS repository will only update packages for the most recent version of R, and one version behind that.
+```r
+remotes::install_github("USGS-R/smwrData")
+remotes::install_github("USGS-R/smwrBase")
+remotes::install_github("USGS-R/smwrGraphs")
+remotes::install_github("USGS-R/smwrStats")
+remotes::install_github("USGS-R/smwrQW")
+remotes::install_github("USGS-R/rloadest")
+```
 
 ## Model Archive
 
