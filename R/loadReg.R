@@ -129,6 +129,7 @@ loadReg <- function(formula, data, subset, na.action, flow, dates,
     Tadj <- loadestTadj(Time)
   } else { # predefined model
     ## In fill the needed parameters from the call
+    m[["formula"]] <- eval(m[["formula"]])
     model.no <- m[["formula"]][[3L]][[2L]]
     m[["formula"]][[3L]][[3L]] <- data
     m[["formula"]][[3L]][[4L]] <- flow
