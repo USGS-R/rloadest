@@ -53,7 +53,7 @@ predConc <- function(fit, newdata, by="day",
     stop("newdata has too many rows, the size limit is 176000")
   }
   ByOpt <- c("unit", "day")
-  match.arg('by', ByOpt)
+  match.arg(by, ByOpt)
   Qadj <- fit$Qadj
   Tadj <- fit$Tadj
   flow <- fit$flow
