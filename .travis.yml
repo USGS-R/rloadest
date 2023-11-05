@@ -7,7 +7,8 @@
 language: r
 cache: packages
 
-matrix:
+# Defining matrix for different build environments
+jobs:
   include:
     - os: linux
       r: release
@@ -15,37 +16,43 @@ matrix:
       r: devel
       env: R_CODECOV=true
 
+# System dependencies
 addons:
   apt:
     packages:
-    - libcurl4-openssl-dev
+      - libcurl4-openssl-dev
 
+# Global environment variables
 env:
-   global:
-     - R_BUILD_ARGS="--no-build-vignettes --no-manual"
-     - R_CHECK_ARGS="--no-build-vignettes --no-manual --as-cran"
-     - NOT_CRAN="true"
-     - _R_CHECK_FORCE_SUGGESTS_=false
-     
+  global:
+    - R_BUILD_ARGS="--no-build-vignettes --no-manual"
+    - R_CHECK_ARGS="--no-build-vignettes --no-manual --as-cran"
+    - NOT_CRAN=true
+    - _R_CHECK_FORCE_SUGGESTS_=false
+
+# Repository options
 repos:
   CRAN: https://cran.rstudio.com
   GRAN: https://owi.usgs.gov/R 
     
+# Turn warnings into errors
 warnings_are_errors: true
 
+# Custom script step
 script: 
-  - |
-    R CMD build ${R_BUILD_ARGS} .
-    travis_wait 20 R CMD check ${R_CHECK_ARGS} rloadest*tar.gz
+  - R CMD build ${R_BUILD_ARGS} .
+  - travis_wait 20 R CMD check ${R_CHECK_ARGS} rloadest*tar.gz
 
+# R packages to install from GitHub
 r_github_packages:
   - jimhester/covr
 
+# Post-build actions
 after_success:
-  - if [[ "${R_CODECOV}" ]]; then R -e 'covr::coveralls()'; fi
-  
+  - if [[ $R_CODECOV ]]; then R -e 'covr::coveralls()'; fi
+
+# Email notifications configuration
 notifications:
   email:
     on_success: change
     on_failure: change
-
